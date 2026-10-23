@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "code": "en-in",
+    "englishName": "English (India)",
+    "version": 1
+  },
+  "cart": "Shopping Cart",
+  "search": "Search items, seeds, crafts...",
+  "settings": "Settings",
+  "profile": "Profile & Account",
+  "changeLanguage": "Change App Language",
+  "phoneLogin": "Login with Mobile Number",
+  "enterOtp": "Enter OTP",
+  "verifyContinue": "Verify & Continue",
+  "postalCode": "PIN Code",
+  "color": "Colour",
+  "authorise": "Authorise",
+  "centre": "Centre",
+  "catalogue": "Catalogue",
+  "license": "Licence",
+  "mandiPrices": "APMC Mandi Bhav & MSP Rates",
+  "farmerHub": "Kisan Processing Hub",
+  "legalAgreementTitle": "Legal Agreement & Regulatory Policy"
+}

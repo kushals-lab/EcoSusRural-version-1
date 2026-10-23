@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "code": "en-gb",
+    "englishName": "English (United Kingdom)",
+    "version": 1
+  },
+  "cart": "Trolley",
+  "search": "Search products & services...",
+  "settings": "Settings & Preferences",
+  "profile": "User Profile",
+  "changeLanguage": "Change Language",
+  "phoneLogin": "Sign In with Mobile Number",
+  "enterOtp": "Enter One-Time Passcode",
+  "verifyContinue": "Verify & Continue",
+  "postalCode": "Postcode",
+  "color": "Colour",
+  "authorise": "Authorise",
+  "centre": "Centre",
+  "catalogue": "Catalogue",
+  "license": "Licence",
+  "mandiPrices": "Agricultural Market Rates",
+  "farmerHub": "Farmer Processing Centre",
+  "legalAgreementTitle": "Terms of Use & User Agreement"
+}

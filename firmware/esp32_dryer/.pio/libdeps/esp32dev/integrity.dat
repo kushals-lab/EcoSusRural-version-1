@@ -1,0 +1,4 @@
+OneWire
+beegee-tokyo/DHT sensor library for ESPx @ ^1.18
+DallasTemperature
+bblanchon/ArduinoJson @ ^7.0.4

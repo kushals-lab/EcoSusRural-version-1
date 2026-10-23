@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "code": "en-us",
+    "englishName": "English (United States)",
+    "version": 1
+  },
+  "cart": "Shopping Cart",
+  "search": "Search products & services...",
+  "settings": "Settings & Preferences",
+  "profile": "User Profile",
+  "changeLanguage": "Change Language",
+  "phoneLogin": "Sign In with Mobile Phone",
+  "enterOtp": "Enter 6-Digit Code",
+  "verifyContinue": "Verify & Continue",
+  "postalCode": "ZIP Code",
+  "color": "Color",
+  "authorise": "Authorize",
+  "centre": "Center",
+  "catalogue": "Catalog",
+  "license": "License",
+  "mandiPrices": "Agricultural Market Prices",
+  "farmerHub": "Farmer Processing Center",
+  "legalAgreementTitle": "Terms of Service & User Agreement"
+}

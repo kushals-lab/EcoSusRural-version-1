@@ -1,0 +1,30 @@
+# EcoSusRural Backend — simple single-node deployment for a small team.
+#
+# Run:      docker compose up -d --build
+# Health:   http://localhost:5000/health
+# API:      http://localhost:5000/api
+#
+# The Node backend is stateless (in-memory rate limiting, direct WebSocket
+# chat), so one container is all that is needed. For more capacity, raise the
+# container resource limits or run `docker compose up --scale backend=N`
+# behind a load balancer — no code changes required.
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ../.env.backend
+    environment:
+      - BACKEND_PORT=5000
+      - NODE_ENV=production
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 10s

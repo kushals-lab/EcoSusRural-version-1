@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "code": "en-au",
+    "englishName": "English (Australia)",
+    "version": 1
+  },
+  "cart": "Cart",
+  "search": "Search produce, crafts & gear...",
+  "settings": "Settings",
+  "profile": "User Profile",
+  "changeLanguage": "Select Language",
+  "phoneLogin": "Sign In with Mobile Number",
+  "enterOtp": "Enter Verification Code",
+  "verifyContinue": "Verify & Continue",
+  "postalCode": "Postcode",
+  "color": "Colour",
+  "authorise": "Authorise",
+  "centre": "Centre",
+  "catalogue": "Catalogue",
+  "license": "Licence",
+  "mandiPrices": "Rural Produce & Livestock Rates",
+  "farmerHub": "Growers Processing Hub",
+  "legalAgreementTitle": "Terms of Service & Fair Trading Policy"
+}
