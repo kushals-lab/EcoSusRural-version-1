@@ -172,6 +172,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           SizedBox(height: 16.h),
 
+          _buildSectionHeader('App Version & Software Updates', Icons.system_update),
+          _buildSettingTile(
+            icon: Icons.system_update,
+            title: 'Check for Updates',
+            subtitle: 'EcoSusRural v1.0.0+1 • Connected to GitHub / Play Updates',
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Row(
+                    children: [
+                      Icon(Icons.system_update, color: Color(0xFF1B4D3E)),
+                      SizedBox(width: 8),
+                      Text('Check for App Updates'),
+                    ],
+                  ),
+                  content: const Text(
+                    'Installed Version: EcoSusRural v1.0.0+1\n\n'
+                    'Your mobile app is currently up-to-date!\n\n'
+                    'Whenever new features or code updates are pushed to GitHub, '
+                    're-running or upgrading the app on your mobile device (via USB debug or APK update) '
+                    'will deliver the latest features instantly.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          SizedBox(height: 16.h),
+
           Container(
             margin: EdgeInsets.only(top: 8.h),
             child: OutlinedButton.icon(

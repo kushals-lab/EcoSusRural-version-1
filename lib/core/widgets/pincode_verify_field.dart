@@ -171,7 +171,7 @@ class _PincodeVerifyFieldState extends State<PincodeVerifyField> {
               SizedBox(width: 8.w),
               Text(
                 'Verifying PIN / Postal code with API...',
-                style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade700, italic: true),
+                style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade700, fontStyle: FontStyle.italic),
               ),
             ],
           ),
