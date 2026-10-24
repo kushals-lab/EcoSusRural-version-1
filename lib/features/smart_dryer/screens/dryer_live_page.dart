@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/dryer_reading.dart';
 import '../providers/dryer_providers.dart';
 import '../widgets/dryer_chart.dart';
+import '../widgets/dryer_simulation_panel.dart';
 class DryerLivePage extends ConsumerWidget {
   const DryerLivePage({super.key});
   @override
@@ -21,6 +22,7 @@ class DryerLivePage extends ConsumerWidget {
           : ref.watch(dryerHistoryProvider(batches.last.id)).value
               ?? const <DryerReading>[];
         return ListView(padding: const EdgeInsets.all(16), children: [
+          if (r?.simulation != null) DryerSimulationPanel(snapshot: r!.simulation!, stale: d.stale),
           if (d.stale)
             const Text('STALE — readings may be unreliable.',
               style: TextStyle(color: Colors.red,

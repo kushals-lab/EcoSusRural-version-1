@@ -1,3 +1,4 @@
+import '../../auth/providers/display_name_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -59,9 +60,10 @@ class _MainDashboardScreenState extends ConsumerState<MainDashboardScreen> {
     // Watch only the two derived values the dashboard renders, so unrelated
     // profile state changes (isSubmitting, errorMessage, …) never rebuild
     // the whole shell. Records compare structurally in Riverpod's select.
+    final registeredName = ref.watch(displayNameProvider).valueOrNull ?? '';
     final (String farmerName, String mainCrop) = ref.watch(
       farmerProfileProvider.select((s) {
-        final name = s.name.isNotEmpty ? s.name : 'Kisan';
+        final name = registeredName.isNotEmpty ? registeredName : s.name;
         final crop = s.selectedCrops.isNotEmpty
             ? s.selectedCrops.first.split(' / ')[0]
             : 'Crops';
@@ -129,7 +131,7 @@ class _MainDashboardScreenState extends ConsumerState<MainDashboardScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${ref.tr('greetingPrefix')}, $farmerName',
+              '${ref.tr('greetingPrefix')} $farmerName',
               style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,

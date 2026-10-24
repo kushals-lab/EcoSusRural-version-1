@@ -36,7 +36,7 @@ class DryerMonitorTab extends ConsumerWidget {
               lastUpdate: d.reading == null ? null :
                   'Last update: ${d.reading!.receivedAt.toLocal()}'
                   '${d.stale ? ' (STALE)' : ''}',
-              isDemo: d.transport == DryerTransportKind.demo,
+              isDemo: d.transport == DryerTransportKind.demo || d.transport == DryerTransportKind.htmlSimulator || d.reading?.fromDemo == true,
             ),
             SizedBox(height: 12.h),
             DryerMonitorGrid(reading: d.reading,

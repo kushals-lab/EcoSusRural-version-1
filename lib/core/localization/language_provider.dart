@@ -1026,19 +1026,19 @@ const Map<String, Map<String, String>> _localizedStrings = {
 
 
 
-    'legalAgreementTerms': 'I agree to the Terms of Service, Google Privacy Policy, and Google Terms of Service for AI data processing.',
+    'legalAgreementTerms': 'I agree to the Terms of Service and understand that AI questions may be processed by Google Gemini.',
 
 
 
-    'legalAgreementPrivacy': 'I acknowledge the Privacy Policy & DPDPA 2023 India Data Residency and the Google data processing terms.',
+    'legalAgreementPrivacy': 'I acknowledge the privacy and data processing notice, including the use of configured service providers.',
 
 
 
-    'legalAgreementIntegrity': 'Platform Integrity: Military-Grade DRM agreement not to record, capture or distribute proprietary masterclasses.',
+    'legalAgreementIntegrity': 'I agree to respect the rights and licenses attached to educational content.',
 
 
 
-    'legalAgreementDocument': '''ECOSUSRURAL PLATFORM INTEGRITY & LEGAL COMPACT\n\n1. TERMS OF SERVICE & ETHICAL COMMERCE\nEcoSusRural directly connects rural and semi-urban producers (artisans, craftspeople, farmers, and MSMEs) with conscious buyers globally. Users agree to provide truthful provenance, uphold fair pricing, and refrain from listing counterfeit, unverified, or adulterated products.\n\n2. AI & DATA PROCESSING NOTICE\nEcoSusRural uses Google Gemini for its AI advisory, decision support, and content generation services. By agreeing to EcoSusRural services, you also agree to the Google Privacy Policy (https://policies.google.com/privacy) and Google Terms of Service (https://policies.google.com/terms) for data collection, processing, and usage.\n\n3. PRIVACY POLICY & DPDPA 2023 COMPLIANCE\nIn accordance with the Digital Personal Data Protection Act 2023 and the Information Technology Act 2000, all personal, financial, and farm data is encrypted (AES-256 at rest, TLS 1.3 in transit) and strictly resident on Indian sovereign data centers. Data is never sold to third-party advertising networks.\n\n4. MILITARY-GRADE DRM & CONTENT SECURITY AGREEMENT\nEcoSusRural enforces strict OS-level anti-piracy protection across all platforms:\n• Screen recording and screenshotting are blocked at the kernel/OS level (FLAG_SECURE on Android, UIScreen.isCaptured on iOS).\n• Masterclasses, market intelligence reports, and satellite weather data streams are encrypted and watermarked with viewer user IDs.\n• Any attempt to record, screen-capture, or distribute proprietary materials results in permanent account termination and prosecution under intellectual property laws.\n\n5. PLATFORM INTEGRITY PLEDGE & ANTI-COUNTERFEITING\n• All GI tags, Organic certifications (NPOP/FSSAI), and Handicraft certifications are verified against official government registers.\n• Payments are held in escrow until buyer receipt confirmation, guaranteeing mutual trust.\n\nPlease review and accept all sections to proceed.''',
+    'legalAgreementDocument': '''ECOSUSRURAL PLATFORM TERMS AND DATA NOTICE\n\n1. COMMERCE AND CONTENT\nUse truthful descriptions and provenance for listings. Do not offer counterfeit or unsafe goods. Educational content may be subject to creator licenses.\n\n2. AI PROCESSING\nGeneral AI questions may be sent from the EcoSusRural backend to Google Gemini. AI answers can be wrong and should be checked before important decisions. Do not enter passwords, OTPs, banking details, or unnecessary identity information in AI prompts.\n\n3. DATA AND PRIVACY\nAccount, location, marketplace, and support data may be processed by the services configured for this app. Storage location, retention, deletion processes, and provider terms require a published privacy policy before public launch.\n\n4. CONTENT PROTECTION\nThe app may restrict screenshots on supported devices. This does not guarantee prevention of every recording method. Respect the rights attached to videos, images, and lessons.\n\n5. LISTINGS AND PAYMENTS\nCertification and origin claims require verification. A listing or payment is complete only when the relevant backend or payment provider confirms it; escrow is not promised by this app.\n\nPlease review the published policies before using production services.''',
 
 
 
@@ -1630,19 +1630,19 @@ const Map<String, Map<String, String>> _localizedStrings = {
 
 
 
-    'antiCounterfeiting': '100% Anti-Counterfeiting Verification',
+    'antiCounterfeiting': 'Listing provenance review',
 
 
 
-    'militaryDrm': 'Military-Grade DRM & Screen Protection',
+    'militaryDrm': 'Content protection controls',
 
 
 
-    'escrowProtection': 'Escrow Payment Buyer Protection',
+    'escrowProtection': 'Payment status confirmation',
 
 
 
-    'dpdpaCompliance': 'DPDPA 2023 Compliant India Data Residency',
+    'dpdpaCompliance': 'Privacy and data controls',
 
 
 
@@ -2655,19 +2655,19 @@ const Map<String, Map<String, String>> _localizedStrings = {
 
 
 
-    'legalAgreementPrivacy': 'मैं गोपनीयता नीति और DPDPA 2023 भारत डेटा निवास को स्वीकार करता हूँ।',
+    'legalAgreementPrivacy': 'मैं गोपनीयता और डेटा प्रसंस्करण सूचना को स्वीकार करता हूँ।',
 
 
 
 
 
-    'legalAgreementIntegrity': 'प्लेटफॉर्म अखंडता: प्रॉपर्टी मैथरक्लास रिकॉर्ड, कैप्चर या वितरित करने के लिए सैन्य-स्तरीय DRM समझौता।',
+    'legalAgreementIntegrity': 'मैं शैक्षिक सामग्री से जुड़े अधिकारों और लाइसेंस का सम्मान करूँगा।',
 
 
 
 
 
-    'legalAgreementDocument': '''ECOSUSRURAL प्लेटफॉर्म इनिग्रिटी और कानूनी समझौता\n\n1. सेवा नियम और नैतिक व्यापार\nEcoSusRural ग्रामीण और अर्ध-शहरी उत्पादकों (कारीगर, कारीगर, किसान और MSMEs) को वैश्विक विचारशील खरीदारों से जोड़ता है। उपयोगकर्ता सही स्रोत, उचित मूल्य और नकली/असत्यापित/अशुद्ध उत्पादों को सूचीबद्ध नहीं करने के लिए सहमत होते हैं।\n\n2. गोपनीयता नीति और DPDPA 2023 अनुपालन\nडिजिटल पर्सनल डेटा प्रोटेक्शन एक्ट 2023 और सूचना प्रौद्योगिकी एक्ट 2000 के अनुसार, सभी व्यक्तिगत, वित्तीय और कृषि डेटा को एन्क्रिप्ट किया जाता है (AES-256 at rest, TLS 1.3 in transit) और भारतीय स्वायत्त डेटा केंद्रों में संग्रहीत किया जाता है। डेटा कभी भी तीसरे पक्ष के विज्ञापन नेटवर्क को नहीं बेचा जाता है।\n\n3. सैन्य-स्तरीय DRM और सामग्री सुरक्षा समझौता\nEcoSusRural सभी प्लेटफॉर्म पर सख्त OS-स्तरीय एंटी-पाइरेसी सुरक्षा लागू करता है:\n• स्क्रीन रिकॉर्डिंग और स्क्रीनशॉटिंग kernel/OS स्तर पर अवरुद्ध है (FLAG_SECURE on Android, UIScreen.isCaptured on iOS)।\n• मास्टरक्लास, मार्केट इंटेलिजेंस रिपोर्ट और सैटेलाइट मौसम डेटा स्ट्रिम एन्क्रिप्ट और व्यूअर यूज़र आईडी के साथ वॉटरमार्क किए जाते हैं।\n• किसी भी रिकॉर्डिंग, स्क्रीन-कैप्चर या प्रॉपर्टी सामग्री के प्रसारण का प्रयास सख्त अकाउंट टर्मिनेशन और IP कानूनों के तहत दंडनीय है।\n\n4. प्लेटफॉर्म अखंडता प्रतिज्ञा और नकली-विरोधी नीति\n• सभी GI टैग, ऑर्गेनिक प्रमाणन (NPOP/FSSAI) और हस्तशिल्प प्रमाणन सरकारी रजिस्टर से सत्यापित किए जाते हैं।\n• भुगतान buyer receipt confirmation तक escrow में रखा जाता है और mutual trust की गारंटी देता है।\n\nकृपया आगे बढ़ने के लिए सभी सेक्शन पढ़ें और स्वीकार करें.''',
+    'legalAgreementDocument': '''ECOSUSRURAL मंच शर्तें और डेटा सूचना\n\n1. व्यापार और सामग्री\nलिस्टिंग में उत्पाद और उसके स्रोत की सही जानकारी दें। नकली या असुरक्षित सामान न बेचें। शैक्षिक सामग्री पर रचनाकार के लाइसेंस लागू हो सकते हैं।\n\n2. AI प्रसंस्करण\nसामान्य AI प्रश्न EcoSusRural सर्वर से Google Gemini को भेजे जा सकते हैं। AI उत्तर गलत हो सकते हैं; महत्वपूर्ण निर्णय से पहले जाँच करें। AI प्रश्न में पासवर्ड, OTP या बैंक विवरण न दें।\n\n3. डेटा और गोपनीयता\nखाता, स्थान और बाजार संबंधी डेटा इस ऐप की सेवाओं में संसाधित हो सकता है। सार्वजनिक लॉन्च से पहले डेटा संग्रह, स्थान, अवधि और हटाने की प्रक्रिया बताने वाली गोपनीयता नीति प्रकाशित की जानी चाहिए।\n\n4. सामग्री सुरक्षा\nकुछ उपकरणों पर ऐप स्क्रीनशॉट सीमित कर सकता है, लेकिन हर रिकॉर्डिंग को रोकने की गारंटी नहीं है। सामग्री के अधिकारों का सम्मान करें।\n\n5. लिस्टिंग और भुगतान\nप्रमाणन और मूल स्थान के दावों की जाँच आवश्यक है। लिस्टिंग या भुगतान तभी पूरा माना जाएगा जब संबंधित सर्वर या भुगतान सेवा पुष्टि करे। ऐप एस्क्रो का वादा नहीं करता।\n\nउत्पादन सेवाओं के उपयोग से पहले प्रकाशित नीतियाँ पढ़ें।''',
 
 
     // Dashboard
@@ -2822,10 +2822,10 @@ const Map<String, Map<String, String>> _localizedStrings = {
 
     // Platform Integrity & Security
     'ethicsTitle': 'मंच सत्यनिष्ठा व नैतिकता संकल्प',
-    'antiCounterfeiting': '100% जाली-रोधी सरकारी सत्यापन',
-    'militaryDrm': 'सैन्य-स्तरीय DRM व स्क्रीन सुरक्षा',
-    'escrowProtection': 'एस्क्रो सुरक्षित भुगतान प्रणाली',
-    'dpdpaCompliance': 'DPDPA 2023 अनुपालन भारत डेटा निवास',
+    'antiCounterfeiting': 'लिस्टिंग स्रोत की समीक्षा',
+    'militaryDrm': 'सामग्री सुरक्षा नियंत्रण',
+    'escrowProtection': 'भुगतान स्थिति की पुष्टि',
+    'dpdpaCompliance': 'गोपनीयता और डेटा नियंत्रण',
 
     // Seller Dashboard
     'sellerDashboard': 'विक्रेता डैशबोर्ड व एनालिटिक्स',

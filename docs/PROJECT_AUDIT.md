@@ -33,7 +33,7 @@ The EcoSusRural ecosystem is an enterprise-grade cross-platform rural empowermen
 
 | External API | Provider | API Key / Auth Status | Endpoint Verified | Live Response Verified |
 |---|---|---|---|---|
-| **Current Daily Mandi Prices** | Ministry of Agriculture (data.gov.in) | `579b464db66ec23bdd000001620103ec09ca47b67a8c40c431d19bb1` | `https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070` | **VERIFIED LIVE (HTTP 200)**: 17,458+ live records retrieved for Andhra Pradesh, Kerala, etc. |
+| **Current Daily Mandi Prices** | Ministry of Agriculture (data.gov.in) | `[configured in backend/.env.local]` | `https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070` | **VERIFIED LIVE (HTTP 200)**: 17,458+ live records retrieved for Andhra Pradesh, Kerala, etc. |
 | **Gemini Generative AI** | Google AI Studio | `AQ.Ab8RN6LTTj_5e7G0R4jA_hqdlqQ2ynyuw3Tmr97gmCXhaBpvsg` | `https://generativelanguage.googleapis.com/v1beta/models` | **VERIFIED LIVE (HTTP 200)**: Models including Gemini 3.8 Flash, Gemini Robotics, Lyria, etc. |
 | **Weather Forecast & Observations** | Open-Meteo & OpenWeatherMap | Keyless Open-Meteo + Backend proxy | `https://api.open-meteo.com/v1/forecast` | **VERIFIED LIVE (HTTP 200)**: 7-day hourly & daily meteorological series |
 

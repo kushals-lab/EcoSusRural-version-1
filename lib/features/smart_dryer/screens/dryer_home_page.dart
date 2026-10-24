@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/dryer_state.dart';
 import '../providers/dryer_providers.dart';
 import 'dryer_connect_sheet.dart';
+import '../widgets/dryer_simulation_panel.dart';
 class DryerHomePage extends ConsumerWidget {
   final VoidCallback onOpenCrops;
   final VoidCallback onOpenLive;
@@ -36,6 +37,7 @@ class DryerHomePage extends ConsumerWidget {
               style: const TextStyle(color: Colors.white,
                 fontSize: 18, fontWeight: FontWeight.bold))),
           const SizedBox(height: 8),
+          if (r?.simulation != null) DryerSimulationPanel(snapshot: r!.simulation!, stale: d.stale),
           Text('Inside: ${t(r?.chamberTempC)} | '
             'Outside: ${t(r?.ambientTempC)} | '
             'Inlet: ${t(r?.inletTempC)} | '

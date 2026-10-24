@@ -36,6 +36,7 @@ class WifiDryerTransport extends DryerTransport {
     try {
       final r = await http.get(Uri.parse('$_baseUrl/telemetry'))
           .timeout(const Duration(seconds: 6));
+      if (_ctrl.isClosed || _baseUrl == null) return;
       if (r.statusCode >= 200 && r.statusCode < 300) {
         final m = jsonDecode(r.body);
         if (m is Map<String, dynamic>) _ctrl.add(m);
@@ -43,7 +44,7 @@ class WifiDryerTransport extends DryerTransport {
         _ctrl.add({'v': '1', 'type': 'error', 'message': 'HTTP ${r.statusCode}'});
       }
     } catch (e) {
-      _ctrl.add({'v': '1', 'type': 'error', 'message': '$e'});
+      if (!_ctrl.isClosed) _ctrl.add({'v': '1', 'type': 'error', 'message': '$e'});
     }
   }
   @override Future<void> send(Map<String, dynamic> m) async {
@@ -53,11 +54,11 @@ class WifiDryerTransport extends DryerTransport {
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(m)).timeout(const Duration(seconds: 6));
     } catch (e) {
-      _ctrl.add({'v': '1', 'type': 'error', 'message': '$e'});
+      if (!_ctrl.isClosed) _ctrl.add({'v': '1', 'type': 'error', 'message': '$e'});
     }
   }
   @override Future<void> disconnect() async {
     _timer?.cancel(); _device = null; _baseUrl = null;
   }
-  void dispose() { _timer?.cancel(); _ctrl.close(); }
+  @override void dispose() { _timer?.cancel(); _baseUrl = null; _device = null; _ctrl.close(); }
 }

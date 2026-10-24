@@ -1,3 +1,5 @@
+import '../../auth/providers/display_name_provider.dart';
+import '../../marketplace/screens/offline_workspace_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,7 +33,8 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(farmerProfileProvider);
-    final String farmerName = profile.name.isNotEmpty ? profile.name : 'Kisan (Farmer)';
+    final registeredName = ref.watch(displayNameProvider).valueOrNull ?? '';
+    final String farmerName = registeredName.isNotEmpty ? registeredName : profile.name;
 
     final tabs = [
       _buildOverview(farmerName),
@@ -367,6 +370,7 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
     );
   }
 
+  // ignore: unused_element
   void _openProductDetail(BuildContext context, (String, String, String, String, int, double) product) {
     // Maps the demo seller-catalogue tuple onto the existing marketplace
     // ProductModel so we reuse ProductDetailScreen (no new feature).
@@ -419,7 +423,7 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
               onPressed: () {
                 // Demo catalogue drill-down (existing page): preview the
                 // first listed product instead of a dead button.
-                _openProductDetail(context, products[0]);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const OfflineWorkspaceScreen()));
               },
               icon: const Icon(Icons.add),
               label: Text('Add New Product',

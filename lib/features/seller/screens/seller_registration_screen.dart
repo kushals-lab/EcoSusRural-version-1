@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../core/localization/language_provider.dart';
+import '../../../core/widgets/pincode_verify_field.dart';
 import '../../payments/screens/eco_bharat_pay_screen.dart';
 import '../../payments/screens/payment_success_screen.dart';
 
@@ -61,6 +62,7 @@ class _SellerRegistrationScreenState extends ConsumerState<SellerRegistrationScr
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
+  final _pincodeController = TextEditingController();
   final _addressController = TextEditingController();
   final _gstController = TextEditingController();
   final _orgController = TextEditingController();
@@ -125,7 +127,7 @@ class _SellerRegistrationScreenState extends ConsumerState<SellerRegistrationScr
   void dispose() {
     _demoTimer?.cancel();
     _nameController.dispose(); _phoneController.dispose(); _emailController.dispose();
-    _addressController.dispose(); _gstController.dispose(); _orgController.dispose();
+    _pincodeController.dispose(); _addressController.dispose(); _gstController.dispose(); _orgController.dispose();
     _headController.dispose(); _otpController.dispose(); _captchaController.dispose();
     _employeeCountController.dispose(); _memberCountController.dispose();
     super.dispose();
@@ -337,6 +339,12 @@ class _SellerRegistrationScreenState extends ConsumerState<SellerRegistrationScr
         SizedBox(height: 12.h),
         _field('Email address', _emailController, 'Enter email address', Icons.email_outlined,
             keyboardType: TextInputType.emailAddress),
+        SizedBox(height: 12.h),
+        PincodeVerifyField(
+          controller: _pincodeController,
+          addressController: _addressController,
+          labelText: 'PIN Code / Postal Code',
+        ),
         SizedBox(height: 12.h),
         _field('Address', _addressController, 'Enter village / district / state', Icons.location_on_outlined),
         SizedBox(height: 12.h),

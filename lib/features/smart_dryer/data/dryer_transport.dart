@@ -13,6 +13,7 @@ abstract class DryerTransport {
   Future<void> send(Map<String, dynamic> message);
   bool get isConnected;
   DryerDeviceInfo? get device;
+  void dispose();
 }
 class BleNotAvailable implements Exception {
   final String message;

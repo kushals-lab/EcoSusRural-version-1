@@ -1,3 +1,5 @@
+import '../../../core/di/injection.dart';
+import '../../../core/network/api_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,6 +19,24 @@ class MarketplaceScreen extends ConsumerStatefulWidget {
 }
 
 class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
+  List<ProductModel> _products = kSampleProducts;
+  String _catalogStatus = 'Example catalog - prices and availability are not live';
+  @override void initState() { super.initState(); _loadCatalog(); }
+  Future<void> _loadCatalog() async {
+    try {
+      final data = await DependencyInjection.apiClient.get('/products');
+      final products = (data['records'] as List).map((j) => ProductModel(
+        id: j['id'].toString(), title: j['title'].toString(), description: '',
+        priceInr: double.parse(j['price'].toString()), category: j['category'] ?? '',
+        state: '', makerName: '', makerVillage: '', rating: 0)).toList();
+      if (mounted) {
+        setState(() {
+        _products = products;
+        _catalogStatus = '${data['_isCache'] == true ? 'Cached catalog - not live' : 'Retrieved catalog'}\nUpdated: ${data['last_fetched_at']}';
+      });
+      }
+    } catch (_) { /* Explicitly labelled example catalogue remains available. */ }
+  }
   String _selectedCategory = 'All';
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -29,7 +49,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
   }
 
   List<ProductModel> get _filteredProducts {
-    return kSampleProducts.where((p) {
+    return _products.where((p) {
       final matchesCategory = _selectedCategory == 'All' || p.category == _selectedCategory;
       final matchesSearch = _searchQuery.isEmpty ||
           p.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
@@ -41,6 +61,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(networkStatusProvider, (previous, next) { if (next.isOnline && previous?.isOnline != true) _loadCatalog(); });
     final products = _filteredProducts;
     final cart = ref.watch(cartProvider);
 
@@ -91,6 +112,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
       ),
       body: Column(
         children: [
+          Padding(padding: const EdgeInsets.all(8), child: Text(_catalogStatus)),
           // Search Bar + Voice Search
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),

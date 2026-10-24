@@ -76,7 +76,7 @@ class _OrganicInputPageState extends State<OrganicInputPage> {
                 color: kHubGreen)),
         centerTitle: true,
       ),
-      body: ListView(
+      body: SafeArea(child: ListView(
         padding: EdgeInsets.all(16.r),
         children: [
           const OrganicTagNotice(),
@@ -98,6 +98,8 @@ class _OrganicInputPageState extends State<OrganicInputPage> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  itemHeight: null,
                   initialValue: _inputType,
                   decoration: const InputDecoration(
                       labelText: 'Input type',
@@ -157,7 +159,7 @@ class _OrganicInputPageState extends State<OrganicInputPage> {
               requirements: kOrganicInputLabReports),
           SizedBox(height: 20.h),
         ],
-      ),
+      )),
     );
   }
 }

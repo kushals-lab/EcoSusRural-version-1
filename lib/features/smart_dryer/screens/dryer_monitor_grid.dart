@@ -6,6 +6,7 @@ import '../domain/dryer_alert.dart';
 import '../domain/dryer_reading.dart';
 import '../domain/dryer_calculations.dart';
 import '../widgets/dryer_stat_card.dart';
+import '../widgets/dryer_simulation_panel.dart';
 class DryerMonitorGrid extends StatelessWidget {
   final DryerReading? reading;
   final bool stale;
@@ -24,6 +25,7 @@ class DryerMonitorGrid extends StatelessWidget {
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (r?.simulation != null) DryerSimulationPanel(snapshot: r!.simulation!, stale: stale),
           GridView.count(crossAxisCount: 2, shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 10, crossAxisSpacing: 10,

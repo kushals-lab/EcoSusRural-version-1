@@ -1,3 +1,5 @@
+import 'core/network/api_client.dart';
+import 'core/storage/offline_workspace.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -47,6 +49,7 @@ class _EcoSusRuralAppState extends ConsumerState<EcoSusRuralApp> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(networkStatusProvider, (previous, next) { if (next.isOnline && previous?.isOnline != true) OfflineWorkspace.sync(); });
     final languageCode = ref.watch(languageProvider.select((s) => s.code));
     final supportedLocales = _supportedLocales;
 

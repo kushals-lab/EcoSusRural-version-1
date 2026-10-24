@@ -8,7 +8,7 @@ class LocalStorage {
   final Map<String, String> _memoryCache = {};
 
   Future<void> init() async {
-    _prefs ??= await SharedPreferences.getInstance();
+    _prefs = await SharedPreferences.getInstance();
   }
 
   Future<void> setString(String key, String value) async {

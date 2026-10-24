@@ -72,7 +72,7 @@ class SpiceLabPage extends StatelessWidget {
                 color: kHubGreen)),
         centerTitle: true,
       ),
-      body: ListView(
+      body: SafeArea(child: ListView(
         padding: EdgeInsets.all(16.r),
         children: [
           const OrganicTagNotice(),
@@ -84,7 +84,7 @@ class SpiceLabPage extends StatelessWidget {
           const LabReportChecklist(requirements: kSpiceLabReports),
           SizedBox(height: 20.h),
         ],
-      ),
+      )),
     );
   }
 }

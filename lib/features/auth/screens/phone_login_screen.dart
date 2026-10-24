@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'otp_verification_screen.dart';
+import 'email_login_screen.dart';
 import 'registration_screen.dart';
+import '../../dashboard/screens/main_dashboard_screen.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/localization/language_provider.dart';
 
@@ -40,6 +42,13 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
         MaterialPageRoute(builder: (context) => const OtpVerificationScreen()),
       );
     });
+  }
+
+  Future<void> _signInWithGoogle() async {
+    final success = await ref.read(authProvider.notifier).signInWithGoogle();
+    if (!mounted || !success) return;
+    Navigator.pushReplacement(context,
+      MaterialPageRoute(builder: (_) => const MainDashboardScreen()));
   }
 
   @override
@@ -134,6 +143,20 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                           ref.tr('sendOtp'),
                           style: TextStyle(fontSize: 18.sp, color: Colors.white, fontWeight: FontWeight.bold),
                         ),
+                ),
+
+                SizedBox(height: 12.h),
+                OutlinedButton.icon(
+                  onPressed: authState.isLoading ? null : _signInWithGoogle,
+                  icon: const Icon(Icons.account_circle_outlined),
+                  label: const Text('Continue with Google'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: authState.isLoading ? null : () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const EmailLoginScreen())),
+                  icon: const Icon(Icons.email_outlined),
+                  label: const Text('Continue with email'),
                 ),
 
                 SizedBox(height: 16.h),

@@ -25,5 +25,5 @@ class BleDryerTransport extends DryerTransport {
     throw const BleNotAvailable('BLE not wired yet. Use Demo or Wi-Fi.');
   }
   @override Future<void> disconnect() async {}
-  void dispose() { _ctrl.close(); }
+  @override void dispose() { _ctrl.close(); }
 }

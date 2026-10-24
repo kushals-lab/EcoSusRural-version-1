@@ -10,7 +10,7 @@ const weatherForecast = require('./tools/weatherForecast');
 const analytics = require('./tools/analytics');
 const schemeData = require('../data/schemes');
 const sourcesTool = require('./tools/sources');
-const textModel = require('./adapters/textModel');
+const textModel = require('./adapters/textProvider');
 const config = require('../config');
 
 const DISCLAIMER_EN = 'AI-generated content can be wrong. Verify critical agronomic, legal or financial decisions with certified human experts.';
@@ -186,20 +186,32 @@ async function runForecast({ loc, lang }) {
   return res;
 }
 
-function runPrice({ lang }) {
+async function runPrice({ query = '', lang, fetcher = require('../routes/mandiRoutes').fetchPrices }) {
   const res = base(lang);
   res.intent = 'price';
-  res.toolsRun.push('priceTool:blocked');
-  const hi = String(lang || 'en').toLowerCase().startsWith('hi');
-  res.answer = hi
-    ? 'Live mandi bhav is gateway se jude nahin hain: AGMARKNET/e-NAM ka koi keyless official API is deployment par uplabdh nahin hai (registration/API key chahiye). Koi bhav report nahin kiya gaya. Satyapan ke liye agmarknet.gov.in kholein.'
-    : 'Live mandi prices are not connected to this gateway: AGMARKNET/e-NAM offer no keyless official API here (registration/API key required). No price is reported. Verify current prices at agmarknet.gov.in.';
-  res.sources = [
-    { title: 'AGMARKNET (official mandi prices)', url: 'https://agmarknet.gov.in/', retrievedAt: srcFetchDate(), type: 'official reference (not queried)' },
-    { title: 'e-NAM (official online mandi trade)', url: 'https://www.enam.gov.in/', retrievedAt: srcFetchDate(), type: 'official reference (not queried)' },
-  ];
-  res.warnings.push('No price figure is given because no verified price source was queried.');
-  res.confidence = 'low';
+  const commodities = ['wheat', 'rice', 'paddy', 'maize', 'cotton', 'onion', 'potato', 'tomato', 'soyabean', 'groundnut', 'mustard', 'gram'];
+  const commodity = commodities.find((name) => new RegExp(`\\b${name}\\b`, 'i').test(query));
+  try {
+    const payload = await fetcher({ limit: 50, offset: 0, ...(commodity ? { commodity } : {}) });
+    res.toolsRun.push('mandi.fetchPrices');
+    const records = (payload.records || []).filter((row) => Number.isFinite(Number(row.modal_price))).slice(0, 5);
+    if (!records.length) {
+      res.answer = 'No reported mandi prices matched this query in the current government dataset response. Try another commodity or the Mandi screen.';
+      res.confidence = 'low';
+    } else {
+      res.answer = records.map((row) => `${row.commodity} at ${row.market}, ${row.state}: modal INR ${row.modal_price}/quintal (reported ${row.arrival_date || 'date unavailable'}).`).join(' ');
+      res.figures = records.map((row) => ({ label: `${row.commodity} - ${row.market}`, value: Number(row.modal_price), unit: 'INR/quintal', period: row.arrival_date || 'not supplied', kind: 'reported_price' }));
+    }
+    res.sources = [{ title: 'Open Government Data Platform India - daily mandi prices', url: payload.source, retrievedAt: payload.last_synced_at, type: 'government reported market data' }];
+    res.dataPeriod = { from: records[0]?.arrival_date || null, to: records[0]?.arrival_date || null };
+    res.warnings.push('These are reported daily market prices, not real-time trades. Verify date, grade and variety before deciding.');
+  } catch (_) {
+    res.toolsRun.push('mandi.fetchPrices:FAILED');
+    res.ok = false;
+    res.answer = 'Government mandi price data is temporarily unavailable. No price is reported.';
+    res.confidence = 'low';
+    res.warnings.push('The government data request failed or the provider key is missing.');
+  }
   return res;
 }
 
@@ -238,7 +250,7 @@ async function runGeneral({ query, history, lang, location, category }) {
   const vars = {
     location: location && location.name ? location.name : 'not provided',
     language: lang || 'en',
-    tools: 'schemes(search in-app catalog), weatherHistory(Open-Meteo archive 2006-now), weatherForecast(Open-Meteo 7-day). Prices: NOT connected. Vision/audio/generation: NOT configured.',
+    tools: 'No live tools were called for this general answer. Weather, mandi prices and schemes are separate routed intents.',
   };
   if (textModel.configured()) {
     const histMsgs = (history || []).slice(-6).map((h) => ({
@@ -255,11 +267,11 @@ async function runGeneral({ query, history, lang, location, category }) {
       return res;
     }
   }
-  res.toolsRun.push('textModel:not_configured');
+  res.toolsRun.push(textModel.configured() ? 'textModel:unavailable' : 'textModel:not_configured');
   const hi = String(lang || 'en').toLowerCase().startsWith('hi');
   res.answer = hi
-    ? 'Is gateway par koi bhasha-model abhi configured nahin hai (LLM_BASE_URL/LLM_MODEL unset) aur is prashn se koi satyapit record match nahin hua. Isliye koi uttar taiyaar nahin kiya gaya. Mausam, itihasik varsha, ya yojanaon ke baare me poochhen — unke liye verified data uplabdh hai.'
-    : 'No language model is configured on this gateway (LLM_BASE_URL/LLM_MODEL are unset) and no verified record matched this query, so no answer was composed. Ask about weather, historical rainfall, forecasts, or government schemes — verified data exists for those.';
+    ? 'Is samay bhasha-model se uttar nahin mila aur koi satyapit record match nahin hua. Kripya baad mein phir koshish karein.'
+    : 'The language model did not provide an answer, and no verified record matched this query. Please try again later.';
   res.sources = [
     { title: 'ICAR (agronomic research, official)', url: 'https://icar.gov.in/', retrievedAt: srcFetchDate(), type: 'official reference (not queried)' },
     { title: 'Ministry of Agriculture & Farmers Welfare', url: 'https://agriwelfare.gov.in/', retrievedAt: srcFetchDate(), type: 'official reference (not queried)' },
@@ -287,7 +299,7 @@ async function answer(input) {
   const intent = routeIntent(query, category);
   if (intent === 'weather_history') return runWeatherHistory({ loc, lang });
   if (intent === 'forecast') return runForecast({ loc, lang });
-  if (intent === 'price') return runPrice({ lang });
+  if (intent === 'price') return runPrice({ query, lang });
   if (intent === 'scheme') return runScheme({ query, lang });
   return runGeneral({ query, history, lang, location: loc, category });
 }

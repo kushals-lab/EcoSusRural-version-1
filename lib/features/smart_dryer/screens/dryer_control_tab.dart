@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/dryer_access.dart';
 import '../domain/dryer_batch.dart';
+import '../domain/dryer_state.dart';
 import '../providers/dryer_providers.dart';
 class DryerControlTab extends ConsumerStatefulWidget {
   final DryerAccess access;
@@ -39,6 +40,7 @@ class _DryerControlTabState extends ConsumerState<DryerControlTab> {
   @override
   Widget build(BuildContext context) {
     final live = ref.watch(dryerLiveProvider);
+    final isHtmlSimulation = live.value?.transport == DryerTransportKind.htmlSimulator;
     final can = widget.access.canOperate;
     return ListView(padding: const EdgeInsets.all(16), children: [
       const Text('Automatic control',
@@ -51,7 +53,7 @@ class _DryerControlTabState extends ConsumerState<DryerControlTab> {
       DropdownButton<String>(value: profile,
         items: [for (final p in kDryerProfiles)
           DropdownMenuItem(value: p.id, child: Text(p.title))],
-        onChanged: can ? (v) =>
+        onChanged: can && !isHtmlSimulation ? (v) =>
             setState(() => profile = v ?? profile) : null),
       Row(children: [
         const Text('Fan'),
@@ -84,8 +86,9 @@ class _DryerControlTabState extends ConsumerState<DryerControlTab> {
         ElevatedButton(
             onPressed: !can ? null : () async {
               if (await confirm('Apply profile + fan + vent?')) {
-                await cmd('set_profile',
-                    {'profile': profile});
+                if (!isHtmlSimulation) {
+                  await cmd('set_profile', {'profile': profile});
+                }
                 await cmd('set_fan',
                     {'pwm': fan.round()});
                 await cmd('set_vent', {'vent': vent});

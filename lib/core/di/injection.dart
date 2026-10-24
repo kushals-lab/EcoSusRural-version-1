@@ -2,7 +2,7 @@ import '../network/api_client.dart';
 import '../storage/local_storage.dart';
 
 class DependencyInjection {
-  static final ApiClient apiClient = ApiClient();
+  static ApiClient apiClient = ApiClient();
   static final LocalStorage localStorage = LocalStorage();
 
   static Future<void> init() async {

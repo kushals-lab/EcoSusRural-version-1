@@ -77,7 +77,7 @@ class _MasterFarmerPageState extends State<MasterFarmerPage> {
                 color: kHubGreen)),
         centerTitle: true,
       ),
-      body: ListView(
+      body: SafeArea(child: ListView(
         padding: EdgeInsets.all(16.r),
         children: [
           Text('Faculty application',
@@ -101,6 +101,8 @@ class _MasterFarmerPageState extends State<MasterFarmerPage> {
           ),
           SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  itemHeight: null,
             initialValue: _mode,
             decoration: const InputDecoration(
                 labelText: 'Teaching mode',
@@ -139,7 +141,7 @@ class _MasterFarmerPageState extends State<MasterFarmerPage> {
           const HubYoutubeCourses(courses: kMasterFarmerYoutubeCourses),
           SizedBox(height: 20.h),
         ],
-      ),
+      )),
     );
   }
 }

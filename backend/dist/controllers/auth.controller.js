@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const emailValidation_service_1 = require("../services/emailValidation.service");
 const otp_service_1 = require("../services/otp.service");
+const { createEmailSession } = require('../../src/services/emailSession');
 class AuthController {
     /**
      * POST /api/v1/auth/send-otp
@@ -44,13 +45,14 @@ class AuthController {
                 message: dispatchResult.message,
                 email: validationResult.normalizedEmail,
                 cooldownSeconds: dispatchResult.cooldownSeconds,
+                expiresInSeconds: dispatchResult.expiresInSeconds,
             });
         }
         catch (error) {
-            console.error('[AuthController.sendOtp] Internal error:', error);
-            res.status(500).json({
+            console.warn('[AuthController.sendOtp] Mail delivery or account storage unavailable.');
+            res.status(503).json({
                 success: false,
-                message: 'An internal server error occurred while processing your request.',
+                message: 'Email sign-in is temporarily unavailable. Please try again later.',
             });
         }
     }
@@ -102,17 +104,15 @@ class AuthController {
                 });
                 return;
             }
-            res.status(200).json({
-                success: true,
-                message: verificationResult.message,
-                verificationToken: verificationResult.verificationToken,
-            });
+            const session = await createEmailSession(normalizedEmail);
+            res.status(200).json({ success: true, message: verificationResult.message,
+                verificationToken: verificationResult.verificationToken, ...session });
         }
         catch (error) {
-            console.error('[AuthController.verifyOtp] Internal error:', error);
-            res.status(500).json({
+            console.warn('[AuthController.verifyOtp] Account storage unavailable.');
+            res.status(503).json({
                 success: false,
-                message: 'An internal server error occurred during OTP verification.',
+                message: 'Email sign-in is temporarily unavailable. Please try again later.',
             });
         }
     }

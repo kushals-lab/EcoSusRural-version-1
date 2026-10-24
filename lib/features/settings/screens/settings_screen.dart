@@ -1,3 +1,6 @@
+import '../../marketplace/screens/offline_workspace_screen.dart';
+import '../../weather/screens/location_selection_screen.dart';
+import '../../clock/clock_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -41,6 +44,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: EdgeInsets.all(16.r),
         children: [
+          ListTile(leading: const Icon(Icons.offline_pin), title: const Text('Offline library & product drafts'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OfflineWorkspaceScreen()))),
+          ListTile(leading: const Icon(Icons.location_on), title: const Text('Location preferences'), subtitle: const Text('Weather, farm, business and market'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LocationSelectionScreen()))),
+          ListTile(leading: const Icon(Icons.alarm), title: const Text('Reminders, alarms, timer and world clock'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClockScreen()))),
           _buildSectionHeader(ref.tr('changeLanguage'), Icons.language),
           _buildSettingTile(
             icon: Icons.translate,

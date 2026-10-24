@@ -7,6 +7,7 @@ import 'dryer_history_store.dart';
 import 'dryer_protocol.dart';
 import 'dryer_transport.dart';
 import 'wifi_transport.dart';
+import 'simulator_transport.dart';
 import '../domain/dryer_alert.dart';
 import '../domain/dryer_batch.dart';
 import '../domain/dryer_calculations.dart';
@@ -44,16 +45,18 @@ class DryerRepository {
   }
   void useTransport(DryerTransportKind kind) {
     if (_transport.kind == kind) return;
-    _transport.disconnect();
-    if (_transport is DemoDryerTransport) {
-      (_transport as DemoDryerTransport).dispose();
-    }
+    _sub?.cancel();
+    _transport.dispose();
+    for (final pending in _pending.values) { if (!pending.isCompleted) pending.complete(false); }
+    _pending.clear();
     _transport = switch (kind) {
       DryerTransportKind.demo => DemoDryerTransport(),
       DryerTransportKind.wifi => WifiDryerTransport(),
       DryerTransportKind.ble => BleDryerTransport(),
+      DryerTransportKind.htmlSimulator => SimulatorDryerTransport(),
     };
     lastReading = null;
+    activeBatch = null;
     lastState = DryerState.notConnected;
     _attach();
     stateCtrl.add(lastState);
@@ -61,7 +64,7 @@ class DryerRepository {
   Future<List<DryerDeviceInfo>> scan() => _transport.scan();
   Future<void> connect(DryerDeviceInfo d) async {
     await _transport.connect(d);
-    lastState = DryerState.ready;
+    if (lastReading == null) lastState = DryerState.ready;
     stateCtrl.add(lastState);
   }
   Future<void> disconnect() async {
@@ -86,7 +89,7 @@ class DryerRepository {
     final reading = DryerProtocol.parseTelemetry(m);
     if (reading != null) {
       final flagged = reading.fromDemo ? reading : reading;
-      final isDemoTransport = _transport.kind == DryerTransportKind.demo;
+      final isDemoTransport = _transport.kind == DryerTransportKind.demo || _transport.kind == DryerTransportKind.htmlSimulator || flagged.fromDemo;
       final stored = DryerReading(
         collectorTempC: flagged.collectorTempC,
         chamberTempC: flagged.chamberTempC,
@@ -103,6 +106,7 @@ class DryerRepository {
         batterySocPct: flagged.batterySocPct,
         charging: flagged.charging, mode: flagged.mode,
         bayId: flagged.bayId,
+        simulation: flagged.simulation,
       );
       lastReading = stored;
       readingsCtrl.add(stored);
@@ -143,12 +147,21 @@ class DryerRepository {
   }
   Future<bool> sendCommand(String cmd,
       {Map<String, dynamic>? args}) async {
+    if (!_transport.isConnected) {
+      errorsCtrl.add('Connect a dryer or simulator before sending commands.');
+      return false;
+    }
     _seq++;
     final seq = _seq;
     final c = Completer<bool>();
     _pending[seq] = c;
-    await _transport.send(
-        DryerProtocol.command(seq: seq, cmd: cmd, args: args));
+    try {
+      await _transport.send(DryerProtocol.command(seq: seq, cmd: cmd, args: args));
+    } catch (_) {
+      _pending.remove(seq);
+      errorsCtrl.add('Command $cmd could not reach the connected device or simulator.');
+      return false;
+    }
     return c.future.timeout(const Duration(seconds: 8),
         onTimeout: () {
       _pending.remove(seq);
@@ -158,6 +171,9 @@ class DryerRepository {
   }
   void dispose() {
     _sub?.cancel();
+    _transport.dispose();
+    for (final pending in _pending.values) { if (!pending.isCompleted) pending.complete(false); }
+    _pending.clear();
     readingsCtrl.close(); stateCtrl.close();
     alertsCtrl.close(); errorsCtrl.close();
   }

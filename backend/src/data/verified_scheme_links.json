@@ -1,0 +1,98 @@
+[
+  {
+    "id": "sfurti",
+    "provider": "Ministry of MSME",
+    "official_information_url": "https://sfurti.msme.gov.in/",
+    "official_application_url": null,
+    "link_reviewed_at": "2026-10-24T00:00:00Z",
+    "application_status": "unknown"
+  },
+  {
+    "id": "pm-mudra",
+    "provider": "Department of Financial Services",
+    "official_information_url": "https://financialservices.gov.in/pradhan-mantri-mudra-yojana-pmmy",
+    "official_application_url": null,
+    "link_reviewed_at": "2026-10-24T00:00:00Z",
+    "application_status": "unknown"
+  },
+  {
+    "id": "pm-jandhan",
+    "provider": "Department of Financial Services",
+    "official_information_url": "https://www.pmjdy.gov.in/files/sliderpdf/ENGLISH/Account-Opening-English.pdf",
+    "official_application_url": null,
+    "link_reviewed_at": "2026-10-24T00:00:00Z",
+    "application_status": "unknown"
+  },
+  {
+    "id": "ayushman",
+    "provider": "National Health Authority",
+    "official_information_url": "https://nha.gov.in/PM-JAY",
+    "official_application_url": "https://beneficiary.nha.gov.in/",
+    "link_reviewed_at": "2026-10-24T00:00:00Z",
+    "application_status": "unknown"
+  },
+  {
+    "id": "cgtmse",
+    "provider": "Ministry of MSME / SIDBI",
+    "official_information_url": "https://my.msme.gov.in/MyMsmeMob/MsmeScheme/Pages/0_2_0.html",
+    "official_application_url": null,
+    "link_reviewed_at": "2026-10-24T00:00:00Z",
+    "application_status": "unknown"
+  },
+  {
+    "id": "tata-rural-scholarship",
+    "provider": "Tata Trusts ? exact named programme unverified",
+    "official_information_url": "https://www.tatatrusts.org/our-work/individual-grants-programme/educational-grants",
+    "official_application_url": null,
+    "link_reviewed_at": "2026-10-24T00:00:00Z",
+    "application_status": "unknown"
+  },
+  {
+    "id": "itc-echoupal-grant",
+    "provider": "ITC ? grant availability unverified",
+    "official_information_url": "https://itcportal.com/itc-businesses/agri-business/itc-e-choupal.html",
+    "official_application_url": null,
+    "link_reviewed_at": "2026-10-24T00:00:00Z",
+    "application_status": "unknown"
+  },
+  {
+    "id": "pm-kisan",
+    "provider": "Ministry of Agriculture & Farmers Welfare",
+    "official_information_url": "https://pmkisan.gov.in/",
+    "official_application_url": "https://www.pmkisan.gov.in/RegistrationFormupdated.aspx",
+    "link_reviewed_at": "2026-10-24T00:00:00Z",
+    "application_status": "unknown"
+  },
+  {
+    "id": "pm-fasal",
+    "provider": "Ministry of Agriculture & Farmers Welfare",
+    "official_information_url": "https://pmfby.gov.in/",
+    "official_application_url": "https://www.pmfby.gov.in/farmerLogin",
+    "link_reviewed_at": "2026-10-24T00:00:00Z",
+    "application_status": "unknown"
+  },
+  {
+    "id": "pm-vishwakarma",
+    "provider": "Ministry of MSME",
+    "official_information_url": "https://www.myscheme.gov.in/schemes/pmv",
+    "official_application_url": null,
+    "link_reviewed_at": "2026-10-24T00:00:00Z",
+    "application_status": "unknown"
+  },
+  {
+    "id": "nsp-scholarship",
+    "provider": "National Scholarship Portal",
+    "official_information_url": "https://scholarships.gov.in/Students",
+    "official_application_url": "https://scholarships.gov.in/Students",
+    "link_reviewed_at": "2026-10-24T00:00:00Z",
+    "application_status": "unknown"
+  },
+  {
+    "id": "reliance-foundation-scholarship",
+    "provider": "Reliance Foundation",
+    "official_information_url": "https://scholarships.reliancefoundation.org/",
+    "official_application_url": null,
+    "link_reviewed_at": "2026-10-24T00:00:00Z",
+    "application_status": "unknown"
+  }
+]

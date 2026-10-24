@@ -76,14 +76,22 @@ describe('scheme retrieval (verified in-app dataset)', () => {
   });
 });
 
-describe('price intent is honest (no live source)', () => {
-  it('reports no price and forces a warning', () => {
-    const r = engine.runPrice({ lang: 'en' });
+describe('price intent uses reported government data', () => {
+  it('uses real record fields and their reporting date', async () => {
+    const r = await engine.runPrice({ query: 'wheat price', lang: 'en', fetcher: async (filters) => {
+      assert.equal(filters.commodity, 'wheat');
+      return { records: [{ commodity: 'Wheat', market: 'Test Market', state: 'Gujarat', modal_price: '2400', arrival_date: '2026-10-23' }],
+        source: 'https://data.gov.in/resource/current-daily-price-various-commodities-various-markets-mandi', last_synced_at: '2026-10-24T00:00:00Z' };
+    } });
     assert.equal(r.intent, 'price');
+    assert.equal(r.figures[0].value, 2400);
+    assert.match(r.answer, /2026-10-23/);
+    assert.ok(r.warnings.some((w) => /not real-time/i.test(w)));
+  });
+  it('reports no fabricated price when provider fails', async () => {
+    const r = await engine.runPrice({ query: 'wheat price', lang: 'en', fetcher: async () => { throw new Error('offline'); } });
+    assert.equal(r.ok, false);
     assert.deepEqual(r.figures, []);
-    assert.ok(r.warnings.some((w) => /no verified price source/i.test(w)));
-    assert.ok(r.answer.includes('agmarknet.gov.in'));
-    assert.ok(r.sources.length >= 2);
   });
 });
 
@@ -154,12 +162,16 @@ describe('weather history (injected fetcher, no network)', () => {
 });
 
 describe('sources registry', () => {
-  it('marks prices as blocked (no invented endpoints)', () => {
+  it('keeps unintegrated markets blocked and reflects the mandi API key', () => {
     const priceSources = sourcesTool.sourcesByKind('prices');
-    assert.ok(priceSources.length >= 2);
+    assert.ok(priceSources.length >= 3);
     for (const s of priceSources) {
-      assert.notEqual(s.status, 'connected');
       assert.ok(/^https:\/\//.test(s.url));
+      if (s.id === 'datagovin-mandi') {
+        assert.equal(s.status, process.env.DATA_GOV_MANDI_API_KEY ? 'connected' : 'blocked');
+      } else {
+        assert.notEqual(s.status, 'connected');
+      }
     }
   });
 });

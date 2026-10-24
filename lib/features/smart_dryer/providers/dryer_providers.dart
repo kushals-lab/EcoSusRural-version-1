@@ -1,5 +1,6 @@
 /// Riverpod providers for the Smart Dryer feature.
 library;
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/dryer_history_store.dart';
 import '../data/dryer_repository.dart';
@@ -27,18 +28,22 @@ class DryerLiveState {
 final dryerLiveProvider =
     StreamProvider<DryerLiveState>((ref) async* {
   final repo = ref.watch(dryerRepositoryProvider);
-  DryerState state = repo.lastState;
-  DryerReading? reading = repo.lastReading;
-  yield DryerLiveState(state: state, reading: reading,
-      transport: repo.transport.kind,
-      deviceName: repo.transport.device?.name);
-  await for (final _ in repo.readings) {
-    reading = repo.lastReading;
-    final stale = reading == null ? true : DateTime.now()
-        .difference(reading.receivedAt).inSeconds > 30;
-    yield DryerLiveState(state: repo.lastState, reading: reading,
-        stale: stale, transport: repo.transport.kind,
-        deviceName: repo.transport.device?.name);
+  final updates = StreamController<void>();
+  void notify() { if (!updates.isClosed) updates.add(null); }
+  final readingSub = repo.readings.listen((_) => notify());
+  final stateSub = repo.states.listen((_) => notify());
+  final timer = Timer.periodic(const Duration(seconds: 2), (_) => notify());
+  DryerLiveState snapshot() => DryerLiveState(state: repo.lastState, reading: repo.lastReading,
+    stale: repo.lastReading == null || DateTime.now().difference(repo.lastReading!.receivedAt).inSeconds > 30,
+    transport: repo.transport.kind, deviceName: repo.transport.device?.name);
+  try {
+    yield snapshot();
+    await for (final _ in updates.stream) { yield snapshot(); }
+  } finally {
+    timer.cancel();
+    await readingSub.cancel();
+    await stateSub.cancel();
+    await updates.close();
   }
 });
 final dryerAlertsProvider =
@@ -46,9 +51,10 @@ final dryerAlertsProvider =
         (ref) => DryerAlertsNotifier(ref));
 class DryerAlertsNotifier extends StateNotifier<List<DryerAlert>> {
   final Ref _ref;
+  StreamSubscription<DryerAlert>? _subscription;
   DryerAlertsNotifier(this._ref) : super([]) {
     final repo = _ref.read(dryerRepositoryProvider);
-    repo.alerts.listen((a) {
+    _subscription = repo.alerts.listen((a) {
       state = [...state, a].take(100).toList();
     });
   }
@@ -59,6 +65,7 @@ class DryerAlertsNotifier extends StateNotifier<List<DryerAlert>> {
     )].take(100).toList();
   }
   void clear() => state = [];
+  @override void dispose() { _subscription?.cancel(); super.dispose(); }
 }
 final dryerBatchesProvider =
     StateNotifierProvider<DryerBatchesNotifier, List<DryerBatch>>(

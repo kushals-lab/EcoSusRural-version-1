@@ -17,7 +17,7 @@ class EcoSusRuralDatabaseConnection:
         self.port = int(os.getenv("PGPORT", "5432"))
         self.database = os.getenv("PGDATABASE", "ecosusrural")
         self.user = os.getenv("PGUSER", "postgres")
-        self.password = os.getenv("PGPASSWORD", "postgres")
+        self.password = os.getenv("PGPASSWORD")
         self._pool = None
         self._connected = False
 

@@ -102,7 +102,7 @@ export class EmailValidationService {
     }
 
     const normalizedDomain = domainPart.toLowerCase();
-    const normalizedEmail = `${localPart}@${normalizedDomain}`;
+    const normalizedEmail = `${localPart.toLowerCase()}@${normalizedDomain}`;
 
     // Disposable Domain Check (both exact match and wildcard/subdomain matching)
     if (this.isDisposableDomain(normalizedDomain)) {

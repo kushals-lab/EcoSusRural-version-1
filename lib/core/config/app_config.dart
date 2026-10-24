@@ -1,6 +1,12 @@
 class AppConfig {
   static const String appName = 'EcoSusRural';
   static const String paymentProviderName = 'EcoBharatPay';
+  // OAuth client IDs are public identifiers. The backend verifies the ID
+  // token audience against its own GOOGLE_WEB_CLIENT_ID setting.
+  static const String googleWebClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue: '265383925832-c7mfguf6r1vi6tqf7rec242dulqs53an.apps.googleusercontent.com',
+  );
 
   // Runtime contract for the Flutter/Dart client. Values should be supplied
   // by dart-define or a generated launch wrapper and default to the
@@ -13,9 +19,8 @@ class AppConfig {
 
   /// Rural Intelligence AI gateway (self-hosted Express backend).
   ///
-  /// SECURITY: No model-provider key is ever bundled into the client and no
-  /// third-party generative endpoint is called from this app. All AI
-  /// inference runs server-side behind /api/ai/*, which this URL only names.
+  /// No model-provider key is bundled into the client. The backend handles
+  /// any provider request behind /api/ai/*.
   /// Configure at build time with --dart-define=AI_GATEWAY_URL=...; when the
   /// gateway is unreachable, the assistant uses its offline advisory.
   static String get aiGatewayUrl =>

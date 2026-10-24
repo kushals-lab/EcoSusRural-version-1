@@ -7,7 +7,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
-const apiKey = process.env.DATA_GOV_MANDI_API_KEY || '579b464db66ec23bdd000001620103ec09ca47b67a8c40c431d19bb1';
+const apiKey = process.env.DATA_GOV_MANDI_API_KEY || '';
 const resourceId = process.env.DATA_GOV_MANDI_RESOURCE_ID || '9ef84268-d588-465a-a308-a864a43d0070';
 const BASE_URL = 'https://api.data.gov.in/resource';
 

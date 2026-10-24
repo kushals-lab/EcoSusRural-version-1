@@ -2,12 +2,13 @@
 library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/rbac/rbac.dart';
 import '../domain/dryer_access.dart';
 import 'dryer_batch_list_tab.dart';
 import 'dryer_control_tab.dart';
 import 'dryer_history_tab.dart';
 import 'dryer_monitor_tab.dart';
+import 'dryer_connect_sheet.dart';
+import '../domain/dryer_state.dart';
 class SmartDryerScreen extends ConsumerStatefulWidget {
   const SmartDryerScreen({super.key});
   @override
@@ -17,7 +18,7 @@ class SmartDryerScreen extends ConsumerStatefulWidget {
 class _SmartDryerScreenState extends ConsumerState<SmartDryerScreen>
     with SingleTickerProviderStateMixin {
   late final TabController tabs;
-  EcoRole role = EcoRole.farmer;
+  String role = 'farmer';
   @override
   void initState() {
     super.initState();
@@ -36,6 +37,9 @@ class _SmartDryerScreenState extends ConsumerState<SmartDryerScreen>
         title: const Text('Smart Solar Dryer',
             style: TextStyle(fontWeight: FontWeight.bold,
                 color: green)),
+        actions: [IconButton(tooltip: 'Connect HTML simulator', icon: const Icon(Icons.science_outlined),
+          onPressed: () => showModalBottomSheet(context: context, isScrollControlled: true,
+            builder: (_) => const DryerConnectSheet(initialKind: DryerTransportKind.htmlSimulator)))],
         bottom: TabBar(controller: tabs, labelColor: green,
           unselectedLabelColor: Colors.grey,
           tabs: const [
@@ -45,14 +49,18 @@ class _SmartDryerScreenState extends ConsumerState<SmartDryerScreen>
       body: Column(children: [
         Padding(padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           child: Row(children: [
-            const Text('Role:'),
+            const Text('Role:', style: TextStyle(fontSize: 12)),
             const SizedBox(width: 8),
-            DropdownButton<EcoRole>(value: role,
-              items: [for (final r in EcoRole.values)
-                DropdownMenuItem(value: r,
-                    child: Text(r.label))],
-              onChanged: (v) =>
-                  setState(() => role = v ?? role)),
+            Expanded(
+              child: DropdownButton<String>(
+                value: role,
+                underline: const SizedBox(),
+                items: ['farmer', 'msme', 'organization', 'artisan', 'buyer']
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                onChanged: (v) => setState(() => role = v ?? role),
+              ),
+            ),
             const SizedBox(width: 8),
             Expanded(child: Text('Dryer access: ${access.label}',
                 textAlign: TextAlign.end,

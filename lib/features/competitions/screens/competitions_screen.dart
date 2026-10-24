@@ -1,3 +1,5 @@
+import '../../clock/clock_screen.dart';
+import '../../clock/reminder_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -109,21 +111,24 @@ class _CompetitionsScreenState extends State<CompetitionsScreen> {
   }
 
   Future<void> _setReminder(CompetitionModel competition) async {
-    setState(() => _reminderIds.add(competition.id));
+    final reminder = await Navigator.push<Reminder>(context, MaterialPageRoute(builder: (_) => ReminderEditor(
+      existing: Reminder(id: DateTime.now().millisecondsSinceEpoch % 2000000000,
+        title: competition.title, at: DateTime.now().add(const Duration(days: 1)), zone: 'Asia/Kolkata'))));
+    if (reminder == null) return;
     try {
+      final store = ReminderStore();
+      await store.permissions();
+      final records = await store.load();
+      final status = await store.save([...records, reminder]);
       final prefs = await SharedPreferences.getInstance();
+      _reminderIds.add(competition.id);
       await prefs.setStringList(_reminderPrefsKey, _reminderIds.toList());
+      if (!mounted) return;
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(status)));
     } catch (_) {
-      // Persisting is best-effort; the tick mark is already visible.
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Reminder was not scheduled. Please try again.')));
     }
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Reminder set for "${competition.title}". We will notify you before it opens.',
-        ),
-      ),
-    );
   }
 
   @override

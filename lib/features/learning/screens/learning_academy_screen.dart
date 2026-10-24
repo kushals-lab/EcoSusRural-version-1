@@ -1,3 +1,4 @@
+import '../../marketplace/screens/offline_workspace_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -112,6 +113,7 @@ class _LearningAcademyScreenState extends State<LearningAcademyScreen> {
           style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: _primaryGreen),
         ),
         centerTitle: true,
+        actions: [IconButton(icon: const Icon(Icons.offline_pin), tooltip: 'Offline learning library', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OfflineWorkspaceScreen())))],
       ),
       body: Column(
         children: [

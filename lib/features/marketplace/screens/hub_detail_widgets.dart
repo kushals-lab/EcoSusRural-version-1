@@ -3,10 +3,11 @@
 library hub_detail_widgets;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../../../core/storage/offline_workspace.dart';
+import '../../../core/network/official_links.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'dart:async' show unawaited;
-import 'dart:io' as io;
+
+
 
 import '../models/processing_models.dart';
 
@@ -61,174 +62,28 @@ class HubCourseVideos extends StatefulWidget {
 
 class _HubCourseVideosState extends State<HubCourseVideos> {
   final Set<String> _watched = {};
-  String? _openId;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Course videos',
-            style: TextStyle(
-                fontSize: 15.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade900)),
-        SizedBox(height: 8.h),
-        ...widget.lessons.map((lesson) {
-          final open = _openId == lesson.id;
-          final done = _watched.contains(lesson.id);
-          return Container(
-            margin: EdgeInsets.only(bottom: 8.h),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12.r),
-              border:
-                  Border.all(color: done ? kHubGreen : Colors.grey.shade300),
-            ),
-            child: Column(
-              children: [
-                ListTile(
-                  leading: Container(
-                    width: 52.w,
-                    height: 38.h,
-                    decoration: BoxDecoration(
-                      color: kHubGreen.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Icon(
-                        done ? Icons.check_circle : Icons.play_circle_fill,
-                        color: kHubGreen,
-                        size: 26.r),
-                  ),
-                  title: Row(
-                    children: [
-                      Expanded(
-                        child: Text(lesson.title,
-                            style: TextStyle(
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.bold)),
-                      ),
-                      SizedBox(width: 6.w),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 6.w, vertical: 2.h),
-                        decoration: BoxDecoration(
-                          color: lesson.isPremium
-                              ? Colors.orange.shade50
-                              : kHubGreen.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(6.r),
-                          border: Border.all(
-                            color: lesson.isPremium
-                                ? Colors.orange.shade300
-                                : kHubGreen.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              lesson.isPremium
-                                  ? Icons.workspace_premium
-                                  : Icons.lock_open_rounded,
-                              size: 11.r,
-                              color: lesson.isPremium
-                                  ? Colors.orange.shade800
-                                  : kHubGreen,
-                            ),
-                            SizedBox(width: 3.w),
-                            Text(
-                              lesson.accessLabel,
-                              style: TextStyle(
-                                fontSize: 9.sp,
-                                fontWeight: FontWeight.bold,
-                                color: lesson.isPremium
-                                  ? Colors.orange.shade900
-                                  : kHubGreen,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  subtitle: Text('${lesson.duration} • ${lesson.instructor}',
-                      style: TextStyle(
-                          fontSize: 11.sp, color: Colors.grey.shade600)),
-                  trailing: Icon(
-                      open ? Icons.expand_less : Icons.expand_more,
-                      color: Colors.grey.shade600),
-                  onTap: () =>
-                      setState(() => _openId = open ? null : lesson.id),
-                ),
-                if (open)
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 12.h),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(lesson.summary,
-                            style: TextStyle(
-                                fontSize: 12.sp,
-                                height: 1.45,
-                                color: Colors.grey.shade800)),
-                        SizedBox(height: 4.h),
-                        Text(
-                          lesson.isPremium
-                              ? 'Paid course — included for verified sellers & organisations.'
-                              : 'Free for buyers, sellers & organisations.',
-                          style: TextStyle(
-                              fontSize: 10.sp,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.grey.shade600),
-                        ),
-                        SizedBox(height: 8.h),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: kHubGreen,
-                                  padding:
-                                      EdgeInsets.symmetric(vertical: 10.h),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(10.r)),
-                                ),
-                                onPressed: () =>
-                                    _openYouTube(context, lesson.youtubeUrl),
-                                icon: const Icon(Icons.play_circle_fill,
-                                    color: Colors.white, size: 18),
-                                label: const Text('Watch on YouTube',
-                                    style: TextStyle(color: Colors.white)),
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            OutlinedButton.icon(
-                              onPressed: () => setState(() {
-                                if (done) {
-                                  _watched.remove(lesson.id);
-                                } else {
-                                  _watched.add(lesson.id);
-                                }
-                              }),
-                              icon: Icon(done ? Icons.refresh : Icons.check,
-                                  size: 16.r),
-                              label: Text(done ? 'Rewatch' : 'Watched'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          );
-        }),
-      ],
-    );
-  }
+  @override Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const Text('Course lessons', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      ...widget.lessons.map((lesson) => Card(child: ExpansionTile(
+        title: Text(lesson.title), subtitle: Text('${lesson.duration} - ${lesson.instructor}\n${lesson.accessLabel}'),
+        childrenPadding: const EdgeInsets.all(12), children: [
+          Text(lesson.summary), const SizedBox(height: 12),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            FilledButton.icon(onPressed: () => _openYouTube(context, lesson.youtubeUrl),
+              icon: const Icon(Icons.play_circle), label: const Text('Watch on YouTube')),
+            OutlinedButton(onPressed: () => setState(() {
+              _watched.contains(lesson.id) ? _watched.remove(lesson.id) : _watched.add(lesson.id);
+            }), child: Text(_watched.contains(lesson.id) ? 'Watched' : 'Mark watched')),
+            TextButton.icon(onPressed: () async {
+              await OfflineWorkspace.save('learning', lesson.id, {'title': lesson.title,
+                'description': lesson.summary, 'source': lesson.youtubeUrl});
+              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lesson notes saved in Offline library. Video requires internet.')));
+            }, icon: const Icon(Icons.download), label: const Text('Save notes offline')),
+          ]),
+        ]))),
+    ]);
 }
-
 
 /// Lab report checklist with per-report upload ticks + sample dispatch.
 class LabReportChecklist extends StatefulWidget {
@@ -373,6 +228,8 @@ class _DryYieldCalculatorState extends State<DryYieldCalculator> {
         ),
         SizedBox(height: 8.h),
         DropdownButtonFormField<DryYieldGuide>(
+          isExpanded: true,
+          itemHeight: null,
           initialValue: _guide,
           decoration: const InputDecoration(
               labelText: 'Produce (ratio)', border: OutlineInputBorder()),
@@ -465,8 +322,8 @@ class HubYoutubeCourses extends StatelessWidget {
       children: [
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 4.w),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Wrap(
+            spacing: 8, runSpacing: 8,
             children: [
               Text('Course videos (free + paid)',
                   style: TextStyle(
@@ -575,45 +432,11 @@ class _YoutubeCard extends StatelessWidget {
 
 
 void _openYouTube(BuildContext context, String url) {
-  if (url.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No video link provided for this course.')),
-    );
+  if (url.isEmpty || url.contains('/demo-')) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Verified video link unavailable. The lesson notes remain available offline.')));
     return;
   }
-  if (Theme.of(context).platform == TargetPlatform.android ||
-      Theme.of(context).platform == TargetPlatform.iOS) {
-    // Web/iframe: copy the link so the user can paste it in a browser.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text('Open this link in your browser: $url'),
-          action: SnackBarAction(
-              label: 'Copy', onPressed: () {
-                Clipboard.setData(ClipboardData(text: url));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Link copied to clipboard.')),
-                );
-              })),
-    );
-    return;
-  }
-  // Windows desktop: launch the default browser with the YouTube link.
-  try {
-    if (io.Platform.isWindows) {
-      unawaited(io.Process.start('cmd.exe', ['/c', 'start', url]));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Opening YouTube in your browser: $url')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Open this link in your browser: $url')),
-      );
-    }
-  } catch (_) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Open this link in your browser: $url')),
-    );
-  }
+  openOfficialLink(context, url);
 }
 
 /// A single course video entry shared by the five hub pages.

@@ -1,4 +1,21 @@
+import 'scheme_sources.dart';
 class SchemeModel {
+  final String? providerName, providerKind, informationUrl, applicationUrl;
+  final DateTime? statusVerifiedAt, openingDate, closingDate;
+  final String verifiedStatus;
+  final List<String> geographicAvailability, supportedApplicantCategories;
+  String get provider => providerName ?? schemeSources[id]?.provider ?? department;
+  String get providerCategory => providerKind ?? (type == 'Government' ? 'government' : 'private/nonprofit');
+  String? get officialInformationUrl => informationUrl ?? schemeSources[id]?.information;
+  String? get officialApplicationUrl => applicationUrl ?? schemeSources[id]?.application;
+  DateTime? get lastVerifiedAt => schemeSources.containsKey(id) ? DateTime.utc(2026, 10, 24) : null;
+  String get applicationStatus {
+    final age = statusVerifiedAt == null ? null : DateTime.now().toUtc().difference(statusVerifiedAt!.toUtc());
+    if (age == null || age.isNegative || age > const Duration(days: 7)) return 'Not recently verified - check the official portal';
+    if (closingDate != null && DateTime.now().isAfter(closingDate!)) return 'Closed';
+    return verifiedStatus;
+  }
+
   final String id;
   final String name;
   final String description;
@@ -45,6 +62,10 @@ class SchemeModel {
     this.processingDays = 15,
     this.applicationFeeInr = 49,
     this.documentFields = const [],
+    this.providerName, this.providerKind, this.informationUrl, this.applicationUrl,
+    this.statusVerifiedAt, this.openingDate, this.closingDate,
+    this.verifiedStatus = 'unknown', this.geographicAvailability = const [],
+    this.supportedApplicantCategories = const [],
   });
 }
 
@@ -79,7 +100,7 @@ const List<SchemeModel> kSchemes = [
     icon: '🌾',
     eligibility: 'All landholding farmer families with cultivable land',
     documents: ['Aadhaar', 'Land Records', 'Bank Account'],
-    status: 'Available',
+    status: 'Status not verified',
     isQuickApply: true,
     type: 'Government',
     kind: 'Schemes',
@@ -100,7 +121,7 @@ const List<SchemeModel> kSchemes = [
     icon: '🛡️',
     eligibility: 'All farmers including sharecroppers & tenant farmers',
     documents: ['Aadhaar', 'Land Records', 'Bank Account', 'Sowing Certificate'],
-    status: 'Available',
+    status: 'Status not verified',
     type: 'Government',
     kind: 'Insurance',
     department: 'PMFBY Cell, Dept. of Agriculture',
@@ -121,7 +142,7 @@ const List<SchemeModel> kSchemes = [
     icon: '🛠️',
     eligibility: 'Artisans in 18 traditional trades, age 18+',
     documents: ['Aadhaar', 'Bank Account', 'Ration Card', 'Skill Certificate'],
-    status: 'Available',
+    status: 'Status not verified',
     isQuickApply: true,
     type: 'Government',
     kind: 'Schemes',
@@ -143,7 +164,7 @@ const List<SchemeModel> kSchemes = [
     icon: '🏭',
     eligibility: 'Traditional industry clusters / artisans',
     documents: ['Cluster Registration', 'Aadhaar', 'Bank Details'],
-    status: 'Apply Now',
+    status: 'Status not verified',
     type: 'Government',
     kind: 'Schemes',
     department: 'SFURTI Cell, Ministry of MSME',
@@ -163,7 +184,7 @@ const List<SchemeModel> kSchemes = [
     icon: '💼',
     eligibility: 'Micro/small enterprises, non-farm income businesses',
     documents: ['Aadhaar', 'Business Plan', 'Bank Statement', 'GSTIN (optional)'],
-    status: 'Available',
+    status: 'Status not verified',
     isQuickApply: true,
     type: 'Government',
     kind: 'Schemes',
@@ -185,7 +206,7 @@ const List<SchemeModel> kSchemes = [
     icon: '🤝',
     eligibility: 'MSMEs with loans approved by member lending institutions',
     documents: ['Loan Sanction Letter', 'MSME Registration', 'GSTIN'],
-    status: 'Apply Now',
+    status: 'Status not verified',
     type: 'Government',
     kind: 'Schemes',
     department: 'CGTMSE Trust (Ministry of MSME)',
@@ -212,7 +233,7 @@ const List<SchemeModel> kSchemes = [
     icon: '🏥',
     eligibility: 'Families from economically weaker sections (SECC 2011)',
     documents: ['Aadhaar', 'SECC Family ID', 'Ration Card'],
-    status: 'Available',
+    status: 'Status not verified',
     type: 'Government',
     kind: 'Insurance',
     department: 'National Health Authority (SHA)',
@@ -232,7 +253,7 @@ const List<SchemeModel> kSchemes = [
     icon: '🏦',
     eligibility: 'Any citizen without existing bank account',
     documents: ['Aadhaar', 'Mobile Number'],
-    status: 'Available',
+    status: 'Status not verified',
     type: 'Government',
     kind: 'Schemes',
     department: 'Department of Financial Services',
@@ -251,7 +272,7 @@ const List<SchemeModel> kSchemes = [
     icon: '🎓',
     eligibility: 'Students enrolled in recognised institutions meeting income criteria',
     documents: ['Aadhaar', 'Income Certificate', 'Previous Marksheet', 'Bank Account'],
-    status: 'Available',
+    status: 'Status not verified',
     type: 'Government',
     kind: 'Scholarships',
     department: 'Ministry of Education (NSP Cell)',
@@ -272,7 +293,7 @@ const List<SchemeModel> kSchemes = [
     icon: '📚',
     eligibility: 'Rural students with 60%+ marks in the last qualifying exam',
     documents: ['Aadhaar', 'Last Marksheet', 'Bonafide Certificate', 'Income Proof'],
-    status: 'Apply Now',
+    status: 'Status not verified',
     type: 'Private',
     kind: 'Scholarships',
     department: 'Tata Trusts Education Cell',
@@ -293,7 +314,7 @@ const List<SchemeModel> kSchemes = [
     icon: '✏️',
     eligibility: 'Students with family income up to ₹15 lakh per year',
     documents: ['Aadhaar', 'Marksheets', 'Admission Proof', 'Income Proof'],
-    status: 'Available',
+    status: 'Status not verified',
     type: 'Private',
     kind: 'Scholarships',
     department: 'Reliance Foundation',
@@ -314,7 +335,7 @@ const List<SchemeModel> kSchemes = [
     icon: '🌦️',
     eligibility: 'Farmers with a bank account and recorded landholding',
     documents: ['Aadhaar', 'Land Record', 'Bank Account', 'Crop Declaration'],
-    status: 'Apply Now',
+    status: 'Status not verified',
     type: 'Private',
     kind: 'Insurance',
     department: 'ICICI Lombard General Insurance',
@@ -335,7 +356,7 @@ const List<SchemeModel> kSchemes = [
     icon: '🧾',
     eligibility: 'Any rural household member aged 18-65',
     documents: ['Aadhaar', 'Bank Account', 'Nominee Details'],
-    status: 'Available',
+    status: 'Status not verified',
     type: 'Private',
     kind: 'Insurance',
     department: 'HDFC ERGO General Insurance',
@@ -355,7 +376,7 @@ const List<SchemeModel> kSchemes = [
     icon: '🚜',
     eligibility: 'Farmer producer organisations and self-help groups',
     documents: ['FPO/SHG Registration', 'Aadhaar', 'Bank Account', 'Project Note'],
-    status: 'Apply Now',
+    status: 'Status not verified',
     type: 'Private',
     kind: 'Schemes',
     department: 'ITC e-Choupal Foundation',

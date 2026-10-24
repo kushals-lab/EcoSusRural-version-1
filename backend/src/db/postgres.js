@@ -4,76 +4,33 @@ const pool = new Pool({
     user: process.env.PGUSER || 'postgres',
     host: process.env.PGHOST || '127.0.0.1',
     database: process.env.PGDATABASE || 'ecosusrural',
-    password: process.env.PGPASSWORD || 'postgres',
+    password: process.env.PGPASSWORD,
     port: Number(process.env.PGPORT || 5432),
-    max: 20, // Max concurrent connections in pool
+    max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 3000,
+    ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: true } : undefined,
 });
 
 let isConnected = false;
 
-// Initialize tables if needed
-async function initDatabase() {
+// Runtime startup and readiness never run DDL. Schema changes belong to a
+// separately authorised migration using a different database role.
+async function checkDatabase() {
     try {
-        const client = await pool.connect();
+        await pool.query('SELECT 1');
         isConnected = true;
-        console.log('PostgreSQL 18 connection established successfully.');
-
-        // Schema migrations for users, products, orders, mandi_cache, weather_cache
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id VARCHAR(64) PRIMARY KEY,
-                phone VARCHAR(20) UNIQUE NOT NULL,
-                name VARCHAR(120),
-                role VARCHAR(32) DEFAULT 'farmer',
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS products (
-                id VARCHAR(64) PRIMARY KEY,
-                seller_id VARCHAR(64),
-                title VARCHAR(255) NOT NULL,
-                category VARCHAR(64),
-                price NUMERIC(10, 2) NOT NULL,
-                stock_quantity INTEGER DEFAULT 0,
-                approval_status VARCHAR(32) DEFAULT 'pending',
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS orders (
-                id VARCHAR(64) PRIMARY KEY,
-                buyer_id VARCHAR(64),
-                total_amount NUMERIC(10, 2) NOT NULL,
-                payment_status VARCHAR(32) DEFAULT 'pending',
-                fulfillment_status VARCHAR(32) DEFAULT 'placed',
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS mandi_cache (
-                commodity VARCHAR(128),
-                market VARCHAR(128),
-                district VARCHAR(128),
-                state VARCHAR(128),
-                min_price NUMERIC(10, 2),
-                max_price NUMERIC(10, 2),
-                modal_price NUMERIC(10, 2),
-                arrival_date VARCHAR(32),
-                synced_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (commodity, market, arrival_date)
-            );
-        `);
-        client.release();
-    } catch (err) {
+        return true;
+    } catch (_error) {
         isConnected = false;
-        console.warn('PostgreSQL 18 pool connection warning:', err.message);
-        console.warn('EcoSusRural backend will continue with resilient in-memory / cache fallback.');
+        return false;
     }
 }
 
 module.exports = {
     query: (text, params) => pool.query(text, params),
     pool,
-    initDatabase,
+    checkDatabase,
+    initDatabase: checkDatabase,
     isDbConnected: () => isConnected,
 };

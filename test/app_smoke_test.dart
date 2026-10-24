@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:eco_sus_rural/main.dart';
+import 'package:eco_sus_rural/features/auth/providers/auth_provider.dart';
 
 Future<void> _pumpFrames(WidgetTester tester,
     {Duration duration = const Duration(milliseconds: 100)}) async {
@@ -52,7 +53,10 @@ void main() {
   testWidgets(
     'full onboarding: language -> legal -> phone login -> OTP -> profile -> dashboard',
     (tester) async {
-      await tester.pumpWidget(const ProviderScope(child: EcoSusRuralApp()));
+      await tester.pumpWidget(ProviderScope(
+        overrides: [authProvider.overrideWith((ref) => AuthNotifier(testOtp: '123456'))],
+        child: const EcoSusRuralApp(),
+      ));
       await _pumpFrames(tester);
 
       // 1. Language gateway is shown.
@@ -139,7 +143,10 @@ void main() {
   testWidgets(
     'wrong OTP is rejected with an error and no navigation',
     (tester) async {
-      await tester.pumpWidget(const ProviderScope(child: EcoSusRuralApp()));
+      await tester.pumpWidget(ProviderScope(
+        overrides: [authProvider.overrideWith((ref) => AuthNotifier(testOtp: '123456'))],
+        child: const EcoSusRuralApp(),
+      ));
       await _pumpFrames(tester);
 
       await tester.enterText(find.byType(TextField).first, 'english');

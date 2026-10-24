@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#173f35">
+  <title>EcoSusRural · Solar Dryer Lab</title>
+  <link rel="stylesheet" href="simulator.css">
+  <script src="dryer-model.js" defer></script>
+  <script src="simulator.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">☀</span><span>EcoSusRural<small>SOLAR DRYER LAB</small></span></a>
+    <div class="top-actions"><span class="tag">INTERACTIVE SIMULATION</span><button class="quiet" id="help-button">How it works <span aria-hidden="true">↗</span></button></div>
+  </header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">FROM SUNLIGHT TO PRESERVATION</p><h1>A little sunshine.<br>A longer harvest.</h1><p class="lede">Explore your six-tray solar dryer. Load fruit, close the door, and watch warm air carry the water away.</p></div>
+      <aside class="pair-box" aria-label="App connection"><div class="connection-label"><span id="connection-dot" class="dot"></span><span id="connection-label">Starting local preview</span></div><p>PAIR WITH YOUR ECOSUSRURAL APP</p><div class="pair-code" id="pair-code">— — — — — —</div><small id="pair-hint">Smart Solar Dryer → Connect → HTML simulator</small><span id="phone-status">No phone paired yet</span><button id="connect-button" class="quiet">Connect to app</button></aside>
+    </section>
+    <section class="metrics" aria-label="Simulated readings">
+      <article><span class="metric-icon orange">♨</span><div><span>Chamber temperature</span><strong id="temperature">28.0 <small>°C</small></strong><p id="ambient-label">Outside 28 °C</p></div></article>
+      <article><span class="metric-icon blue">◉</span><div><span>Fruit moisture · wet basis</span><strong id="moisture">— <small>%</small></strong><p>Illustrative, not measured</p></div></article>
+      <article><span class="metric-icon teal">↟</span><div><span>Water evaporated</span><strong id="water">0.000 <small>kg</small></strong><p id="evap-rate">0.000 kg / simulated hour</p></div></article>
+      <article><span class="metric-icon green">▤</span><div><span>Current fruit weight</span><strong id="weight">0.000 <small>kg</small></strong><p id="load-label">0 of 6 trays loaded</p></div></article>
+    </section>
+    <div class="workspace">
+      <section class="machine-card" aria-label="Interactive dryer illustration">
+        <div class="card-heading"><div><p class="eyebrow">YOUR DRYER, EXPLAINED</p><h2>Smart solar cabinet</h2></div><div class="segmented" aria-label="Diagram view"><button id="assembled-button" class="selected" aria-pressed="true">Assembled</button><button id="exploded-button" aria-pressed="false">Exploded</button></div></div>
+        <div class="drawing-wrap">
+          <div class="diagram-chips"><span id="state-chip" class="status-chip">Ready to load</span><span class="subtle-chip" id="time-label">0h 00m simulated</span></div>
+          <svg id="dryer-svg" viewBox="0 0 920 805" role="img" aria-labelledby="diagram-title diagram-description">
+            <title id="diagram-title">EcoSusRural six-tray solar dryer</title>
+            <desc id="diagram-description">A cabinet matching the provided reference, with a solar collector on top, a transparent door, six stainless-steel trays, an ESP32 control unit, twin axial fans, battery and adjustable legs. Controls outside the diagram operate the simulation.</desc>
+            <defs>
+              <linearGradient id="steel-front" x2="1" y2="1"><stop stop-color="#606c6a"/><stop offset=".5" stop-color="#394542"/><stop offset="1" stop-color="#25332f"/></linearGradient>
+              <linearGradient id="steel-side"><stop stop-color="#1e2c29"/><stop offset="1" stop-color="#46504e"/></linearGradient>
+              <linearGradient id="glass" x2="1" y2="1"><stop stop-color="#d2ebe1" stop-opacity=".17"/><stop offset=".5" stop-color="#e7f3ed" stop-opacity=".07"/><stop offset="1" stop-color="#a3c8b9" stop-opacity=".24"/></linearGradient>
+              <linearGradient id="panel-fill" x2="0" y2="1"><stop stop-color="#60727e"/><stop offset="1" stop-color="#303f4f"/></linearGradient>
+              <linearGradient id="chamber-warm" x2="0" y2="1"><stop stop-color="#f5b74e" stop-opacity=".25"/><stop offset="1" stop-color="#f3a43a" stop-opacity="0"/></linearGradient>
+              <pattern id="mesh" width="7" height="5" patternUnits="userSpaceOnUse"><path d="M0 0H7 M0 0V5" stroke="#a1b5ab" stroke-width=".6" opacity=".55"/></pattern>
+              <pattern id="solar-grid" width="26" height="20" patternUnits="userSpaceOnUse" patternTransform="skewX(-30)"><rect width="25" height="19" fill="url(#panel-fill)" stroke="#7f929c" stroke-width=".5"/></pattern>
+              <marker id="arrow-warm" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#f1ac45"/></marker>
+              <marker id="arrow-cool" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#70b4c0"/></marker>
+            </defs>
+            <ellipse cx="488" cy="759" rx="216" ry="20" fill="#183b2e" opacity=".08"/>
+            <g id="sun-group" transform="translate(190 104)"><g class="sun-rays"><path d="M0-54V-40 M0 40V54 M-54 0H-40 M40 0H54 M-38-38L-28-28 M28 28L38 38 M-38 38L-28 28 M28-28L38-38" stroke="#eeb751" stroke-width="3" stroke-linecap="round"/></g><circle r="28" fill="#f5c65f"/><circle r="20" fill="#ffdf8b"/></g>
+            <g id="sun-beams" stroke="#edc16c" stroke-width="2" stroke-dasharray="6 9" opacity=".7"><path d="M242 112L434 182"/><path d="M233 137L405 200"/><path d="M249 90L488 174"/></g>
+            <g id="cabinet">
+              <path d="M330 235L590 235L665 194L405 194Z" fill="#69736f" stroke="#293832" stroke-width="4"/>
+              <path d="M590 235L665 194V545L590 585Z" fill="url(#steel-side)" stroke="#293832" stroke-width="5"/>
+              <path d="M603 251L653 223V536L603 563Z" fill="#b5cbbf" fill-opacity=".08" stroke="#71867b" stroke-width="2"/>
+              <rect x="330" y="235" width="260" height="350" rx="2" fill="#1d2f28" stroke="#607169" stroke-width="6"/>
+              <rect id="heat-glow" x="337" y="242" width="246" height="334" fill="url(#chamber-warm)"/>
+              <g stroke="#6c8073" stroke-width="3" opacity=".65"><path d="M339 276H584 M339 326H584 M339 376H584 M339 426H584 M339 476H584 M339 526H584"/></g>
+              <g id="airflow-paths" fill="none" stroke-width="4" stroke-linecap="round"><path class="cool-flow" d="M270 727Q280 680 376 680" stroke="#70b4c0" marker-end="url(#arrow-cool)"/><path class="cool-flow" d="M701 703Q661 671 553 681" stroke="#70b4c0" marker-end="url(#arrow-cool)"/><path class="warm-flow" d="M362 559Q357 480 367 407T370 260" stroke="#f1ac45" marker-end="url(#arrow-warm)"/><path class="warm-flow" d="M564 559Q573 465 564 382T562 256" stroke="#f1ac45" marker-end="url(#arrow-warm)"/><path class="warm-flow" d="M463 258Q465 225 492 210" stroke="#f1ac45" marker-end="url(#arrow-warm)"/></g>
+              <g id="tray-layer"></g>
+              <g id="vapour-layer" fill="#9ed6d6"></g>
+              <g id="door" class="door" role="button" tabindex="0" aria-label="Toggle transparent access door">
+                <rect x="327" y="231" width="268" height="352" rx="3" fill="url(#glass)" stroke="#81918a" stroke-width="7"/>
+                <path d="M342 250L453 251L342 388Z" fill="#ecfff4" opacity=".055"/>
+                <path d="M337 237V577 M584 238V577" stroke="#c9d6cc" opacity=".28"/>
+                <rect x="576" y="395" width="29" height="12" rx="3" fill="#ccd6cd" stroke="#819087"/><rect x="586" y="389" width="7" height="24" rx="2" fill="#dce6dd"/>
+                <g fill="#b8c9bc"><circle cx="334" cy="254" r="3"/><circle cx="334" cy="558" r="3"/><circle cx="588" cy="254" r="3"/><circle cx="588" cy="558" r="3"/></g>
+              </g>
+            </g>
+            <g id="top-cover"><path d="M322 226L590 226L673 182L406 182Z" fill="#7a8680" stroke="#34483d" stroke-width="4"/><path d="M322 226V235H590V226" fill="#526459"/></g>
+            <g id="solar-panel"><path d="M320 211L589 211L676 165L407 165Z" fill="#1d2a28" stroke="#84908b" stroke-width="4"/><path d="M339 204L586 204L657 171L409 171Z" fill="url(#solar-grid)" stroke="#293d3d" stroke-width="2"/><path d="M320 211V219L589 219V211 M589 219L676 173V165" fill="#263530" stroke="#536158" stroke-width="2"/></g>
+            <g id="base-unit">
+              <path d="M330 585H590L665 545V621L590 663H330Z" fill="url(#steel-front)" stroke="#35483c" stroke-width="4"/>
+              <path d="M590 585L665 545V621L590 663Z" fill="#34483e"/>
+              <rect x="348" y="602" width="115" height="43" rx="4" fill="#25392d" stroke="#a8b6a8" stroke-width="2"/><rect x="355" y="608" width="72" height="26" rx="2" fill="#142e33"/><text id="lcd-temp" x="360" y="626" font-size="15" font-family="monospace" fill="#b6e2b8">28.0°C</text><g fill="#a7bca8"><circle cx="442" cy="613" r="3"/><circle cx="442" cy="625" r="3"/><circle cx="442" cy="636" r="3"/></g>
+              <rect x="480" y="606" width="79" height="35" rx="4" fill="#314c3a" stroke="#a1ad9c"/><g fill="#b9c4af"><circle cx="494" cy="623" r="5"/><circle cx="516" cy="623" r="5"/></g><circle id="run-led" cx="544" cy="623" r="4" fill="#8c9c87"/>
+              <text x="348" y="655" fill="#c4dbbb" font-size="10" font-weight="700" letter-spacing="2">ECOSUSRURAL</text>
+              <path d="M330 664H590L643 634V704L590 729H330Z" fill="#253a2e" stroke="#52664f" stroke-width="3"/>
+              <g id="fans"></g>
+              <g id="battery"><path d="M609 596L643 578L658 587V616L624 635L609 626Z" fill="#1b2a24" stroke="#76806d" stroke-width="2"/><path d="M617 591L648 582" stroke="#a2b18a" stroke-width="3"/><path d="M628 601L634 597L631 608L637 605L629 618L631 608L626 611Z" fill="#eac76d"/></g>
+              <g fill="#405845" stroke="#71836a" stroke-width="3"><path d="M331 716H346V757H330Z"/><path d="M573 716H590V757H573Z"/><path d="M646 687L659 682V728L646 735Z"/></g><g stroke="#2f4532" stroke-width="5"><path d="M326 758H351 M568 758H595 M641 735H662"/></g>
+            </g>
+            <g id="part-labels" fill="#52675b" font-size="12" font-family="Arial,sans-serif">
+              <g class="part-label" data-part="solar"><path d="M665 175H728"/><circle cx="665" cy="175" r="3"/><text x="741" y="172">SOLAR COLLECTOR</text><text class="label-sub" x="741" y="190">Sunlight → warm air</text></g>
+              <g class="part-label" data-part="door"><path d="M592 311H728"/><circle cx="592" cy="311" r="3"/><text x="741" y="308">TRANSPARENT DOOR</text><text class="label-sub" x="741" y="326">UV-resistant polycarbonate</text></g>
+              <g class="part-label" data-part="trays"><path d="M599 455H728"/><circle cx="599" cy="455" r="3"/><text x="741" y="451">6 REMOVABLE TRAYS</text><text class="label-sub" x="741" y="469">Stainless-steel mesh</text></g>
+              <g class="part-label" data-part="controller"><path d="M559 623H728"/><circle cx="559" cy="623" r="3"/><text x="741" y="620">ESP32 CONTROL UNIT</text><text class="label-sub" x="741" y="638">Sensors & fan control</text></g>
+              <g class="part-label" data-part="fans"><path d="M557 690H728"/><circle cx="557" cy="690" r="3"/><text x="741" y="686">TWIN 12V DC FANS</text><text class="label-sub" x="741" y="704">Fresh-air intakes</text></g>
+              <g class="part-label" data-part="outlet"><path d="M370 253L275 285H75"/><circle cx="370" cy="253" r="3"/><text x="75" y="271">AIR OUTLET</text></g>
+              <g class="part-label" data-part="chamber"><path d="M330 427H75"/><circle cx="330" cy="427" r="3"/><text x="75" y="412">DRYING CHAMBER</text></g>
+              <g class="part-label" data-part="battery"><path d="M633 611L688 580H729"/><circle cx="633" cy="611" r="3"/><text x="741" y="574">BATTERY PACK</text><text class="label-sub" x="741" y="592">Charge controller</text></g>
+              <g class="part-label" data-part="legs"><path d="M331 742L279 712H75"/><circle cx="331" cy="742" r="3"/><text x="75" y="698">ADJUSTABLE LEGS</text></g>
+            </g>
+          </svg>
+          <div class="diagram-footer"><span><i class="legend-dot warm"></i>Warm air</span><span><i class="legend-dot cool"></i>Fresh air / moisture</span><button id="airflow-button" class="quiet" aria-pressed="true">Airflow visible</button></div>
+        </div>
+        <div class="machine-actions"><button id="door-button" class="secondary">Open door</button><button id="start-button" class="primary">▶ Start drying</button><button id="pause-button" class="secondary">Pause</button><button id="sample-button" class="quiet">Try a sample batch ↗</button></div>
+        <div class="progress-section"><div><span>Illustrative drying progress</span><strong id="progress-label">0%</strong></div><progress id="progress" max="1" value="0"></progress><small>Moisture targets and drying times are educational estimates, not calibrated sensor readings or food-safety certification.</small></div>
+      </section>
+      <aside class="controls">
+        <section class="control-card"><div class="card-heading"><div><p class="eyebrow">01 · THE ENVIRONMENT</p><h2>Bring in the sunshine</h2></div><span class="sun-mini">☀</span></div>
+          <label class="slider-label" for="sunlight"><span>Solar irradiance</span><strong id="sunlight-value">850 W/m²</strong></label><input id="sunlight" type="range" min="0" max="1100" step="10" value="850"><div class="range-captions"><span>Night / heavy shade</span><span>Full sun</span></div>
+          <div class="input-pair"><label>Outside temperature<input id="ambient" type="number" min="5" max="45" step="1" value="28"><span>°C</span></label><label>Outside humidity<input id="humidity" type="number" min="10" max="95" step="1" value="55"><span>% RH</span></label></div>
+          <label class="slider-label" for="speed"><span>Time acceleration</span><strong id="speed-value">300×</strong></label><input id="speed" type="range" min="60" max="1200" step="60" value="300"><small id="speed-hint">1 real second = 5 simulated minutes</small>
+          <div class="input-pair bottom-controls"><label for="fan">Fan speed<select id="fan"><option value="0">0% · natural flow</option><option value="40">40%</option><option value="70" selected>70%</option><option value="100">100%</option></select></label><label for="vent">Air outlet<select id="vent"><option value="open">Open</option><option value="half">Half open</option><option value="closed">Closed</option></select></label></div>
+        </section>
+        <section class="control-card tray-card"><div class="card-heading"><div><p class="eyebrow">02 · YOUR HARVEST</p><h2>Load the drying trays</h2></div><span class="count-badge">6</span></div><p class="control-note" id="tray-instruction">Open door → pull tray out → load fruit → insert tray.</p>
+          <div class="input-pair"><label for="fruit">Fruit<select id="fruit"><option value="mango">Mango slices</option><option value="tomato">Tomato slices</option><option value="chilli">Chillies</option><option value="banana">Banana slices</option><option value="apple">Apple slices</option></select></label><label for="mass">Fresh weight / tray<input id="mass" type="number" min="0.1" max="2" step="0.1" value="0.3"><span>kg</span></label></div>
+          <div id="tray-controls"></div>
+        </section>
+      </aside>
+    </div>
+    <section class="lower-grid"><article class="control-card"><p class="eyebrow">03 · WHAT'S HAPPENING</p><h2>A small journey, powered by the sun.</h2><div class="explanation"><div><span>1</span><h3>Capture</h3><p>The collector absorbs sunlight and warms the cabinet.</p></div><div><span>2</span><h3>Circulate</h3><p>Fresh air enters through the fans and passes over six trays.</p></div><div><span>3</span><h3>Evaporate</h3><p>Water leaves the fruit and exits with the moist exhaust air.</p></div></div></article><article class="control-card"><div class="card-heading"><div><p class="eyebrow">LIVE SIMULATION LOG</p><h2>Every little change</h2></div><button id="reset-button" class="quiet">Reset</button></div><ol id="event-log" class="event-log" aria-live="polite"></ol></article></section>
+    <footer>Based on your EcoSusRural dryer reference · Six trays · Twin axial fans · 850 × 520 × 450 mm reference dimensions<br><span>This simulator never operates physical hardware. Simulation sessions reset when the backend restarts.</span></footer>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="help-dialog"><button class="quiet close-dialog" id="close-help">Close ✕</button><p class="eyebrow">A QUICK WALKTHROUGH</p><h2>Make your first batch.</h2><ol><li>Open the door and pull a tray out.</li><li>Choose a fruit and weight, then load it onto the tray.</li><li>Insert the tray. Repeat for other trays if you like.</li><li>Close the door and press Start drying.</li><li>Change the sunlight to see temperature and evaporation respond.</li><li>To remove fruit, open the door, pull the tray out and unload it.</li></ol><p>To mirror this in the phone app, open Smart Solar Dryer → Connect → HTML simulator and enter the six-digit code shown above. Both displays use the same backend simulation state.</p><p class="fine-print">Open this page through the backend for app synchronization. Opening index.html directly provides an independent local preview. Real drying performance requires hardware measurements.</p></dialog>
+</body>
+</html>

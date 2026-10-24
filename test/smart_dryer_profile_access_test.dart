@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eco_sus_rural/features/smart_dryer/domain/crop_profile.dart';
 import 'package:eco_sus_rural/features/smart_dryer/domain/dryer_access.dart';
 import 'package:eco_sus_rural/features/smart_dryer/domain/dryer_session.dart';
-import 'package:eco_sus_rural/core/rbac/rbac.dart';
 
 CropProfile _p({
   String name = 'Tomato',
@@ -71,9 +70,9 @@ void main() {
 
   group('DryerAccess', () {
     test('maps roles to access levels', () {
-      expect(dryerAccessFor(EcoRole.farmer), DryerAccess.operator);
-      expect(dryerAccessFor(EcoRole.organization), DryerAccess.admin);
-      expect(dryerAccessFor(EcoRole.buyer), DryerAccess.viewer);
+      expect(dryerAccessFor('farmer'), DryerAccess.operator);
+      expect(dryerAccessFor('organization'), DryerAccess.admin);
+      expect(dryerAccessFor('buyer'), DryerAccess.viewer);
     });
     test('only admin can configure; viewers cannot operate', () {
       expect(DryerAccess.admin.canConfigure, isTrue);

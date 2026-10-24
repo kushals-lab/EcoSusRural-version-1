@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../domain/dryer_alert.dart';
 import '../domain/dryer_reading.dart';
 import '../domain/dryer_state.dart';
+import '../domain/dryer_simulation.dart';
 class DryerProtocol {
   static const String version = '1';
   static const int staleAfterSec = 30;
@@ -39,7 +40,9 @@ class DryerProtocol {
       fanOn: d['fanOn'] as bool?,
       fanPwmPct: n('fanPwm')?.toInt(),
       ventState: d['vent']?.toString(),
-      receivedAt: DateTime.now(),
+      receivedAt: DateTime.tryParse(m['ts']?.toString() ?? '') ?? DateTime.now(),
+      fromDemo: m['simulated'] == true || d['simulation'] is Map,
+      simulation: d['simulation'] is Map ? DryerSimulationSnapshot.fromMap(Map<String, dynamic>.from(d['simulation'] as Map)) : null,
       // v2 optional fields (null = unavailable, never zero-fill).
       inletTempC: n('inletC')?.toDouble(),
       exhaustTempC: n('exhaustC')?.toDouble(),

@@ -1,6 +1,6 @@
 /// Smart Solar Dryer domain: transport + operating states.
 library;
-enum DryerTransportKind { demo, wifi, ble }
+enum DryerTransportKind { demo, wifi, ble, htmlSimulator }
 enum DryerState {
   notConnected, ready, preparing, running,
   paused, completed, warning, safetyShutdown, unknown,

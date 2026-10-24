@@ -30,16 +30,16 @@ class OfflineStatusBar extends ConsumerWidget {
             size: 14.sp,
           ),
           SizedBox(width: 8.w),
-          Text(
+          Expanded(child: Text(
             netState.status == NetworkStatus.checking
                 ? 'Connecting to EcoSusRural network...'
-                : 'Offline Mode • Showing saved records',
+                : 'Server unavailable • Saved records may be out of date',
             style: TextStyle(
               color: Colors.white,
               fontSize: 12.sp,
               fontWeight: FontWeight.w600,
             ),
-          ),
+          )),
           SizedBox(width: 8.w),
           GestureDetector(
             onTap: () => ref.read(networkStatusProvider.notifier).checkConnectivity(),

@@ -4,7 +4,6 @@
 library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/rbac/rbac.dart';
 import '../domain/dryer_access.dart';
 import 'crop_profile_page.dart';
 import 'dryer_home_page.dart';
@@ -12,6 +11,8 @@ import 'dryer_live_page.dart';
 import 'dryer_manual_page.dart';
 import 'dryer_session_page.dart';
 import 'dryer_settings_page.dart';
+import 'dryer_connect_sheet.dart';
+import '../domain/dryer_state.dart';
 class DryerSuiteScreen extends ConsumerStatefulWidget {
   const DryerSuiteScreen({super.key});
   @override
@@ -20,7 +21,7 @@ class DryerSuiteScreen extends ConsumerStatefulWidget {
 }
 class _DryerSuiteScreenState extends ConsumerState<DryerSuiteScreen> {
   int _idx = 0;
-  EcoRole role = EcoRole.farmer;
+  String role = 'farmer';
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   void _go(int i) {
     setState(() => _idx = i);
@@ -40,11 +41,15 @@ class _DryerSuiteScreenState extends ConsumerState<DryerSuiteScreen> {
         title: const Text('Smart Solar Dryer',
           style: TextStyle(fontWeight: FontWeight.bold, color: green)),
         actions: [
+          IconButton(tooltip: 'Connect HTML simulator', icon: const Icon(Icons.science_outlined),
+            onPressed: () => showModalBottomSheet(context: context, isScrollControlled: true,
+              builder: (_) => const DryerConnectSheet(initialKind: DryerTransportKind.htmlSimulator))),
           Padding(padding: const EdgeInsets.only(right: 8),
-            child: DropdownButton<EcoRole>(value: role, underline:
+            child: DropdownButton<String>(value: role, underline:
               const SizedBox(),
-              items: [for (final r in EcoRole.values)
-                DropdownMenuItem(value: r, child: Text(r.label))],
+              items: ['farmer', 'msme', 'organization', 'artisan', 'buyer']
+                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                  .toList(),
               onChanged: (v) =>
                 setState(() => role = v ?? role))),
         ]),

@@ -6,7 +6,7 @@ import '../models/weather_day.dart';
 /// Destination of the "View mandi impact" action on Weather Intelligence.
 ///
 /// It projects how the coming 7-day weather is expected to move mandi arrivals
-/// and prices, and benchmarks the demand outlook against last season's recorded
+/// and prices, and benchmarks the demand outlook against illustrative baseline
 /// mandi data. Charts are drawn with [CustomPainter] so the app needs no extra
 /// charting dependency.
 class MandiImpactScreen extends StatelessWidget {
@@ -17,7 +17,7 @@ class MandiImpactScreen extends StatelessWidget {
 
   static const Color _primaryGreen = Color(0xFF1B4D3E);
 
-  /// Last season's weekly demand index recorded at the district mandi (0-100).
+  /// Illustrative index, never government market observations.
   static const List<double> _lastSeasonDemand = [62, 71, 80, 88];
 
   int get _rainyDays => forecast.where((d) => d.rainMm >= 5).length;
@@ -62,6 +62,7 @@ class MandiImpactScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text('Illustrative planning estimates only. Baseline charts are examples, not official mandi prices or historical observations.'),
             _buildImpactSummary(),
             SizedBox(height: 16.h),
             _buildArrivalChart(),
@@ -297,7 +298,7 @@ class MandiImpactScreen extends StatelessWidget {
             spacing: 14.w,
             runSpacing: 6.h,
             children: const [
-              _LegendDot(color: Color(0xFF9E9E9E), label: 'Last season (actual)'),
+              _LegendDot(color: Color(0xFF9E9E9E), label: 'Illustrative baseline'),
               _LegendDot(color: Color(0xFF1B4D3E), label: 'This season (projected)'),
             ],
           ),

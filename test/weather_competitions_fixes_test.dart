@@ -10,6 +10,9 @@
 //   * "View mandi impact" opens the charted mandi outlook, and
 //   * "Set alert" opens the "Alarm set successfully" confirmation screen.
 import 'package:eco_sus_rural/core/permission/location_permission.dart';
+import 'dart:convert';
+import 'package:eco_sus_rural/core/di/injection.dart';
+import 'package:eco_sus_rural/core/network/api_client.dart';
 import 'package:eco_sus_rural/features/competitions/screens/competitions_screen.dart';
 import 'package:eco_sus_rural/features/weather/models/weather_day.dart';
 import 'package:eco_sus_rural/features/weather/screens/mandi_impact_screen.dart';
@@ -17,6 +20,9 @@ import 'package:eco_sus_rural/features/weather/screens/weather_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Pumps [home] at a fixed device size with an optional text scale.
@@ -30,8 +36,29 @@ Future<void> _pumpScreen(
   tester.view.physicalSize = size;
   addTearDown(tester.view.resetDevicePixelRatio);
   addTearDown(tester.view.resetPhysicalSize);
+  if (home is WeatherScreen) {
+    final previous = DependencyInjection.apiClient;
+    DependencyInjection.apiClient = ApiClient(clientFactory: () => MockClient((request) async {
+      if (request.url.path == '/api/weather') {
+        final first = DateTime.utc(2026, 10, 24);
+        final dates = List.generate(7, (i) => first.add(Duration(days: i)).millisecondsSinceEpoch ~/ 1000);
+        return http.Response(jsonEncode({
+          'source': 'Fixture forecast', 'observation_kind': 'model forecast',
+          'source_reported_at': first.toIso8601String(), 'last_fetched_at': first.toIso8601String(),
+          'server_time': first.toIso8601String(), 'cache_status': 'fresh', 'timezone': 'Asia/Kolkata', 'utc_offset_seconds': 19800,
+          'current': {'time': dates.first, 'temperature_2m': 29, 'relative_humidity_2m': 60, 'weather_code': 1},
+          'daily': {'time': dates, 'temperature_2m_max': List.filled(7, 33),
+            'temperature_2m_min': List.filled(7, 24), 'precipitation_sum': List.filled(7, 2),
+            'precipitation_probability_max': List.filled(7, 40), 'relative_humidity_2m_mean': List.filled(7, 62),
+            'weather_code': List.filled(7, 1)},
+        }), 200);
+      }
+      return http.Response('{}', 404);
+    }));
+    addTearDown(() { DependencyInjection.apiClient.close(); DependencyInjection.apiClient = previous; });
+  }
   await tester.pumpWidget(
-    ScreenUtilInit(
+    ProviderScope(child: ScreenUtilInit(
       designSize: const Size(390, 844),
       minTextAdapt: true,
       builder: (_, __) => MaterialApp(
@@ -42,7 +69,7 @@ Future<void> _pumpScreen(
         ),
         home: home,
       ),
-    ),
+    )),
   );
   await tester.pumpAndSettle();
 }
@@ -51,6 +78,8 @@ Future<void> _pumpScreen(
 void _grantLocation(String mode) {
   SharedPreferences.setMockInitialValues(<String, Object>{
     LocationPermissionStore.prefsKey: mode,
+    'ecosus.locations.guest': jsonEncode({'weather': {'city': 'Amreli', 'state': 'Gujarat',
+      'country': 'India', 'timezone': 'Asia/Kolkata', 'latitude': 21.5999, 'longitude': 71.2162}}),
   });
   LocationPermissionStore.reset();
 }
@@ -125,7 +154,7 @@ void main() {
     }
   });
 
-  testWidgets('Set Reminder becomes a ticked reminder mark', (tester) async {
+  testWidgets('Set Reminder opens scheduling without claiming success', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     await _pumpScreen(tester, const CompetitionsScreen());
 
@@ -136,19 +165,15 @@ void main() {
     await tester.tap(setReminder.first);
     await tester.pumpAndSettle();
 
-    // The button is replaced by the ticked "Reminder set" badge.
-    expect(find.text('Reminder set'), findsOneWidget);
-    expect(find.byIcon(Icons.check_circle), findsWidgets);
+    expect(find.text('Schedule reminder'), findsOneWidget);
+    expect(find.text('Reminder set'), findsNothing);
 
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getStringList('ecosus.competitions.reminders'), isNotEmpty);
-
-    // Let the confirmation snack bar expire before the test ends.
-    await tester.pump(const Duration(seconds: 5));
+    expect(prefs.getStringList('ecosus.competitions.reminders'), isNull);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('location consent offers the four platform choices', (
+  testWidgets('location consent permits manual choice without device permission', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -171,28 +196,24 @@ void main() {
     await tester.tap(find.text('Ask location'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Allow every time'), findsOneWidget);
-    expect(find.text('Only while using the app'), findsOneWidget);
-    expect(find.text('Ask every time'), findsOneWidget);
-    expect(find.text('Deny'), findsOneWidget);
-    expect(find.text('Needed for Weather Intelligence'), findsOneWidget);
+    expect(find.text('Location for local weather'), findsOneWidget);
+    expect(find.text('Choose manually'), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
-    await tester.ensureVisible(find.text('Only while using the app'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Only while using the app'));
+    await tester.tap(find.text('Choose manually'));
     await tester.pumpAndSettle();
 
-    expect(LocationPermissionStore.allowsAccess, isTrue);
+    expect(LocationPermissionStore.allowsAccess, isFalse);
     expect(LocationPermissionStore.shouldAsk, isFalse);
     final prefs = await SharedPreferences.getInstance();
     expect(
       prefs.getString(LocationPermissionStore.prefsKey),
-      LocationAccessMode.allowWhileUsingApp.name,
+      LocationAccessMode.deny.name,
     );
   });
 
-  testWidgets('weather intelligence asks for location when never asked', (
+  testWidgets('weather intelligence allows manual location without a forced permission sheet', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -201,16 +222,9 @@ void main() {
     await _pumpScreen(tester, const WeatherScreen());
     await tester.pumpAndSettle();
 
-    expect(find.text('Allow every time'), findsOneWidget);
-    expect(find.text('Deny'), findsOneWidget);
-
-    await tester.tap(find.text('Deny'));
-    await tester.pumpAndSettle();
-
-    // Denying is honoured: the page still works on the village anchor.
-    expect(find.text('Location access is off'), findsOneWidget);
-    expect(find.text('7-Day Forecast'), findsOneWidget);
-    expect(find.text('Weather – Yield Correlation'), findsOneWidget);
+    expect(find.text('Choose your weather location'), findsOneWidget);
+    expect(find.text('Allow every time'), findsNothing);
+    expect(find.text('Deny'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -218,37 +232,29 @@ void main() {
     for (final textScale in [1.0, 1.3, 1.6]) {
       _grantLocation(LocationAccessMode.allowEveryTime.name);
       await _pumpScreen(tester, const WeatherScreen(), textScale: textScale);
+      await tester.scrollUntilVisible(find.text('7-Day Forecast'), 120,
+        scrollable: find.byType(Scrollable).first);
+      await tester.pumpAndSettle();
 
       expect(find.text('7-Day Forecast'), findsOneWidget);
-      expect(find.text('Today'), findsOneWidget);
       expect(find.byType(ListView), findsWidgets);
       expect(tester.takeException(), isNull,
           reason: 'forecast strip overflowed at text scale $textScale');
     }
   });
 
-  testWidgets('Set alert opens the alarm-set confirmation screen', (
+  testWidgets('weather screen opens the real reminders and clocks screen', (
     tester,
   ) async {
     _grantLocation(LocationAccessMode.allowEveryTime.name);
     await _pumpScreen(tester, const WeatherScreen());
 
-    final setAlert = find.text('Set alert');
-    await tester.ensureVisible(setAlert);
-    await tester.pumpAndSettle();
-    await tester.tap(setAlert);
+    await tester.tap(find.byTooltip('Reminders and clocks'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Alarm set successfully'), findsOneWidget);
-    expect(find.text('Weather Alert'), findsOneWidget);
-    expect(find.text('What you will be alerted about'), findsOneWidget);
+    expect(find.text('Reminders & clocks'), findsOneWidget);
+    expect(find.text('World clock'), findsOneWidget);
     expect(tester.takeException(), isNull);
-
-    await tester.ensureVisible(find.text('Done'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Done'));
-    await tester.pumpAndSettle();
-    expect(find.text('Weather Intelligence'), findsOneWidget);
   });
 
   testWidgets('View mandi impact opens the charted mandi outlook', (
@@ -257,8 +263,8 @@ void main() {
     _grantLocation(LocationAccessMode.allowEveryTime.name);
     await _pumpScreen(tester, const WeatherScreen());
 
-    final mandi = find.text('View mandi impact');
-    await tester.ensureVisible(mandi);
+    final mandi = find.text('Forecast-based mandi impact estimates');
+    await tester.scrollUntilVisible(mandi, 250, scrollable: find.byType(Scrollable).first);
     await tester.pumpAndSettle();
     await tester.tap(mandi);
     await tester.pumpAndSettle();
@@ -266,11 +272,11 @@ void main() {
     expect(find.text('Mandi Impact Forecast'), findsOneWidget);
     expect(find.text('Projected mandi arrivals (next 7 days)'), findsOneWidget);
     expect(find.text('Future demand vs last season'), findsOneWidget);
-    expect(find.text('Crop-wise mandi outlook'), findsOneWidget);
+    expect(find.text('Future demand outlook by crop'), findsOneWidget);
     // Both charts are custom-painted.
     expect(find.byType(CustomPaint), findsWidgets);
     expect(find.text('Normal day'), findsOneWidget);
-    expect(find.text('Last season (actual)'), findsOneWidget);
+    expect(find.text('Last season price (actual)'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

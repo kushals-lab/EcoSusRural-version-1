@@ -59,7 +59,7 @@ class StorageLabPage extends StatelessWidget {
                 color: kHubGreen)),
         centerTitle: true,
       ),
-      body: ListView(
+      body: SafeArea(child: ListView(
         padding: EdgeInsets.all(16.r),
         children: [
           const OrganicTagNotice(),
@@ -71,7 +71,7 @@ class StorageLabPage extends StatelessWidget {
           const LabReportChecklist(requirements: kStorageLabReports),
           SizedBox(height: 20.h),
         ],
-      ),
+      )),
     );
   }
 }

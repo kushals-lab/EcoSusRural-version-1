@@ -1,4 +1,4 @@
-/// Rural Intelligence AI gateway — provider-independent, NO Gemini dependency.
+/// Rural Intelligence AI gateway with server-side text providers.
 ///
 /// Routes:
 ///   POST /api/ai/answer       {query, category?, history?, location?, language?}
@@ -13,7 +13,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const answerEngine = require('./answerEngine');
 const visionModel = require('./adapters/visionModel');
-const textModel = require('./adapters/textModel');
+const textModel = require('./adapters/textProvider');
 
 const router = express.Router();
 
@@ -46,7 +46,7 @@ router.post('/answer', aiLimiter, async (req, res) => {
       confidence: 'low', dataPeriod: null, series: null, toolsRun: [],
       capability: { textModel: textModel.configured(), visionModel: visionModel.configured() },
       disclaimer: 'AI-generated content can be wrong.',
-      error: String((e && e.message) || e),
+      error: 'INTERNAL_GATEWAY_ERROR',
     });
   }
 });
@@ -78,7 +78,7 @@ router.get('/capabilities', (req, res) => {
       ? { visionModel: true, reason: 'configured via VISION_BASE_URL' }
       : { visionModel: false, reason: 'VISION_BASE_URL/VISION_MODEL not set' },
     retrieval: {
-      schemes: true, weatherHistory: true, weatherForecast: true, prices: false,
+      schemes: true, weatherHistory: true, weatherForecast: true, prices: Boolean(process.env.DATA_GOV_MANDI_API_KEY),
     },
     limits: {
       imageMime: [...visionModel.MIME_OK],

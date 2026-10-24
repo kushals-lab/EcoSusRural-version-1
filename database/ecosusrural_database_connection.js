@@ -9,8 +9,9 @@ const pool = new Pool({
     user: process.env.PGUSER || 'postgres',
     host: process.env.PGHOST || '127.0.0.1',
     database: process.env.PGDATABASE || 'ecosusrural',
-    password: process.env.PGPASSWORD || 'postgres',
+    password: process.env.PGPASSWORD || undefined,
     port: Number(process.env.PGPORT || 5432),
+    ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: true } : undefined,
     max: 20, // Max concurrent connections in pool
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 3000,

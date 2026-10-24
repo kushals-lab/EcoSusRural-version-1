@@ -1,3 +1,4 @@
+import '../auth/providers/display_name_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -49,7 +50,7 @@ class _PolyglotDashboardScreenState extends ConsumerState<PolyglotDashboardScree
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Welcome, ', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: _primaryGreen)),
+            Text('Namaste ${ref.watch(displayNameProvider).valueOrNull ?? ''}', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: _primaryGreen)),
             Text('EcoSusRural', style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]))
           ]
         ),

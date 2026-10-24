@@ -4,7 +4,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/localization/language_provider.dart';
-import '../../../core/permission/location_permission.dart';
+import '../../../core/widgets/pincode_verify_field.dart';
+import '../providers/auth_provider.dart';
+import 'email_login_screen.dart';
+import '../../weather/screens/location_selection_screen.dart';
 import '../../presentation/onboarding_tutorial_screen.dart';
 
 enum _AccountType { buyer, seller, organisation }
@@ -39,8 +42,6 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   final _idController = TextEditingController();
   final _bankController = TextEditingController();
   final _ifscController = TextEditingController();
-  final _emailOtpController = TextEditingController();
-  final _captchaController = TextEditingController();
   final _orgNameController = TextEditingController();
   final _headNameController = TextEditingController();
 
@@ -56,7 +57,6 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   bool _emailVerified = false;
   bool _pennyDropDone = false;
   bool _isSubmitting = false;
-  String _captchaText = 'E4B7';
   final Map<String, bool> _docUploads = {};
 
   @override
@@ -85,19 +85,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     _idController.dispose();
     _bankController.dispose();
     _ifscController.dispose();
-    _emailOtpController.dispose();
-    _captchaController.dispose();
     _orgNameController.dispose();
     _headNameController.dispose();
     super.dispose();
-  }
-
-  void _regenCaptcha() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    final seed = DateTime.now().microsecondsSinceEpoch;
-    _captchaText = String.fromCharCodes(Iterable.generate(
-        4, (i) => chars.codeUnitAt((seed >> (i * 3)) % chars.length)));
-    _captchaController.clear();
   }
 
   @override
@@ -327,28 +317,25 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         SizedBox(height: 12.h),
         TextFormField(
           controller: _emailController,
+          onChanged: (_) => setState(() => _emailVerified = false),
           keyboardType: TextInputType.emailAddress,
           decoration: _inputDecoration(ref.tr('emailAddress'), Icons.email),
           validator: (v) =>
               v == null || !v.contains('@') ? ref.tr('emailInvalid') : null,
         ),
         SizedBox(height: 12.h),
-        TextFormField(
-          controller: _addressController,
-          decoration: _inputDecoration(ref.tr('deliveryAddress'), Icons.home),
-          validator: (v) =>
-              v == null || v.isEmpty ? ref.tr('addressRequired') : null,
+        PincodeVerifyField(
+          controller: _pincodeController,
+          addressController: _addressController,
+          labelText: ref.tr('pinCode'),
         ),
         SizedBox(height: 12.h),
         TextFormField(
-          controller: _pincodeController,
-          keyboardType: TextInputType.number,
-          maxLength: 6,
-          decoration: _inputDecoration(ref.tr('pinCode'), Icons.pin_drop)
-              .copyWith(counterText: ''),
-          validator: (v) => v == null || !RegExp(r'^\d{6}$').hasMatch(v)
-              ? ref.tr('validPin')
-              : null,
+          controller: _addressController,
+          maxLines: 2,
+          decoration: _inputDecoration(ref.tr('deliveryAddress'), Icons.home),
+          validator: (v) =>
+              v == null || v.isEmpty ? ref.tr('addressRequired') : null,
         ),
       ],
     );
@@ -383,7 +370,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 fontWeight: FontWeight.bold,
                 color: _primaryGreen)),
         SizedBox(height: 12.h),
-        // Email OTP + captcha verification (mandatory for all account types)
+        // Server-verified email OTP is required for every account type.
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
@@ -875,6 +862,8 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
 
   Future<void> _submit(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
+    final user = ref.read(authProvider).user;
+    if (!_emailVerified || user == null) return;
     setState(() => _isSubmitting = true);
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -885,8 +874,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       if (_type == _AccountType.seller) {
         await prefs.setString('ecosus.user.plan', _planLabel);
       }
+      await prefs.setString('ecosus.display_name.${user.uid}', _nameController.text.trim());
       await prefs.setString('ecosus.auth.user',
-          'local-${_phoneController.text.hashCode.abs()}|${_phoneController.text}');
+          '${user.uid}|${_phoneController.text}|${user.roleKey}');
 
       if (!mounted || !context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -896,7 +886,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       // here — right after registration and just before the tutorial. The user
       // chooses between allow every time / only while using the app / ask every
       // time / deny, and denying never blocks any screen.
-      await showLocationPermissionSheet(context);
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => const LocationSelectionScreen(firstRegistration: true)));
       if (!mounted || !context.mounted) return;
       Navigator.pushReplacement(
         context,
@@ -947,98 +937,11 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     );
   }
 
-  void _showEmailOtpCaptchaDialog(BuildContext context) {
-    _regenCaptcha();
-    _emailOtpController.clear();
-    showDialog(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: Row(
-            children: [
-              const Icon(Icons.mark_email_read, color: _primaryGreen),
-              SizedBox(width: 8.w),
-              Expanded(
-                  child: Text(ref.tr('emailOtpVerify'),
-                      style: TextStyle(fontSize: 16.sp))),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('${ref.tr('emailOtpSent')}: ${_emailController.text}',
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey[700])),
-              SizedBox(height: 12.h),
-              TextField(
-                controller: _emailOtpController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                decoration: _inputDecoration(ref.tr('enterOtp'), Icons.password)
-                    .copyWith(counterText: ''),
-              ),
-              SizedBox(height: 8.h),
-              // Simple captcha panel with refresh
-              Row(
-                children: [
-                  Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Text(
-                      _captchaText,
-                      style: TextStyle(
-                        fontSize: 17.sp,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 4,
-                        fontStyle: FontStyle.italic,
-                        color: Colors.blueGrey,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => setDialogState(_regenCaptcha),
-                    icon: const Icon(Icons.refresh, color: _primaryGreen),
-                  ),
-                ],
-              ),
-              TextField(
-                controller: _captchaController,
-                textCapitalization: TextCapitalization.characters,
-                decoration:
-                    _inputDecoration(ref.tr('enterCaptcha'), Icons.security),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(ref.tr('cancel')),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: _primaryGreen),
-              onPressed: () {
-                if (_emailOtpController.text.length == 6 &&
-                    _captchaController.text.trim().toUpperCase() ==
-                        _captchaText) {
-                  Navigator.pop(dialogContext);
-                  setState(() => _emailVerified = true);
-                } else {
-                  setDialogState(_regenCaptcha);
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    SnackBar(content: Text(ref.tr('wrongCaptcha'))),
-                  );
-                }
-              },
-              child: Text(ref.tr('verifyContinue'),
-                  style: const TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _showEmailOtpCaptchaDialog(BuildContext context) async {
+    final email = _emailController.text.trim().toLowerCase();
+    final verified = await Navigator.push<String>(context,
+      MaterialPageRoute(builder: (_) => EmailLoginScreen(initialEmail: email, verificationOnly: true)));
+    if (!mounted || verified != _emailController.text.trim().toLowerCase()) return;
+    setState(() => _emailVerified = true);
   }
 }

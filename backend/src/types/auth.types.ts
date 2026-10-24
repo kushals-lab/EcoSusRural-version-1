@@ -16,6 +16,7 @@ export interface SendOtpResult {
   success: boolean;
   message: string;
   cooldownSeconds?: number;
+  expiresInSeconds?: number;
 }
 
 export interface VerifyOtpResult {

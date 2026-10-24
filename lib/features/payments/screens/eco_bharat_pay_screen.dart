@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'payment_success_screen.dart';
-import 'ussd_fallback_screen.dart';
 
 class EcoBharatPayScreen extends StatefulWidget {
   final double amount;
@@ -85,18 +84,21 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
         title: Text('Authenticate Payment',
             style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('Confirm Rs ${widget.amount.toStringAsFixed(2)} for ${widget.purpose}',
+          Text(
+              'Confirm Rs ${widget.amount.toStringAsFixed(2)} for ${widget.purpose}',
               style: TextStyle(fontSize: 13.sp)),
           SizedBox(height: 12.h),
           _authOption(ctx, Icons.dialpad, 'Enter UPI PIN'),
           SizedBox(height: 8.h),
           _authOption(ctx, Icons.fingerprint, 'Biometric confirmation'),
           SizedBox(height: 8.h),
-          _authOption(ctx, Icons.redeem, 'Apply Direct Benefit Subsidy (DBT) code'),
+          _authOption(
+              ctx, Icons.redeem, 'Apply Direct Benefit Subsidy (DBT) code'),
         ]),
       ),
     );
@@ -111,7 +113,8 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
       ),
       onPressed: () => Navigator.pop(ctx, true),
       icon: Icon(icon, color: _primaryGreen, size: 18),
-      label: Text(label, style: TextStyle(fontSize: 12.sp, color: Colors.black87)),
+      label:
+          Text(label, style: TextStyle(fontSize: 12.sp, color: Colors.black87)),
     );
   }
 
@@ -133,26 +136,19 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
       setState(() => _state = _PayState.idle);
       return;
     }
-    await Future.delayed(const Duration(seconds: 2));
-
     if (!mounted) return;
-    if (_simulateWeakNetwork) {
-      // STATE 5: ERROR RECOVERY - soft amber, inputs preserved, USSD fallback.
-      setState(() => _state = _PayState.error);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(
-            'Network timeout. All checkout details preserved - retry or use the offline USSD protocol.'),
-      ));
-      return;
-    }
-
-    // STATE 4: SUCCESS - flash green, confirm, open the target page.
-    setState(() => _state = _PayState.success);
-    await Future.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
-    _finishPayment();
+    // There is no configured, authorized provider SDK and no signed webhook
+    // verification path in this MVP. Never present a local confirmation as a
+    // completed payment, including during weak/offline connectivity.
+    setState(() => _state = _PayState.error);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text(
+          'Payment provider is not configured. No payment was taken or confirmed.'),
+    ));
   }
 
+  // Kept only as an internal integration seam for a future provider callback.
+  // ignore: unused_element
   void _finishPayment() {
     final ctx = widget.successContext;
     if (ctx != null) {
@@ -174,7 +170,8 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -184,7 +181,8 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
                 color: Colors.green.shade50,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.check_circle, color: Colors.green.shade600, size: 48.r),
+              child: Icon(Icons.check_circle,
+                  color: Colors.green.shade600, size: 48.r),
             ),
             SizedBox(height: 16.h),
             Text(
@@ -210,7 +208,8 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
             child: FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: _primaryGreen,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.r)),
               ),
               onPressed: () {
                 Navigator.pop(ctx); // pop dialog
@@ -225,18 +224,9 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
   }
 
   void _retryOfflineUssd() {
-    final ctx = widget.successContext;
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => UssdFallbackScreen(
-        amount: widget.amount,
-        purpose: widget.purpose,
-        referenceId: widget.referenceId,
-        idempotencyKey: _idempotencyKey,
-        successTitle: ctx?.title ?? 'Payment Verified!',
-        successSubtitle:
-            'Rs ${widget.amount.toStringAsFixed(2)} paid for ${widget.purpose} via offline USSD.',
-        quotas: ctx?.quotas ?? const [],
-      ),
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text(
+          'Offline payment is unavailable until a verified provider flow is configured.'),
     ));
   }
 
@@ -249,7 +239,10 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
         elevation: 1,
         title: Text(
           'EcoBharatPay',
-          style: TextStyle(color: _primaryGreen, fontWeight: FontWeight.bold, fontSize: 20.sp),
+          style: TextStyle(
+              color: _primaryGreen,
+              fontWeight: FontWeight.bold,
+              fontSize: 20.sp),
         ),
         centerTitle: true,
         leading: IconButton(
@@ -284,7 +277,8 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
                       children: [
                         Text(
                           'Amount to Pay',
-                          style: TextStyle(fontSize: 13.sp, color: Colors.grey[600]),
+                          style: TextStyle(
+                              fontSize: 13.sp, color: Colors.grey[600]),
                         ),
                         SizedBox(height: 8.h),
                         Text(
@@ -297,29 +291,35 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
                         ),
                         SizedBox(height: 12.h),
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 12.w, vertical: 6.h),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade100,
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                           child: Text(
                             widget.purpose,
-                            style: TextStyle(fontSize: 12.sp, color: Colors.grey[800]),
+                            style: TextStyle(
+                                fontSize: 12.sp, color: Colors.grey[800]),
                           ),
                         ),
                         SizedBox(height: 8.h),
                         Text(
                           'Ref: ${widget.referenceId}',
-                          style: TextStyle(fontSize: 10.sp, color: Colors.grey[400]),
+                          style: TextStyle(
+                              fontSize: 10.sp, color: Colors.grey[400]),
                         ),
                       ],
                     ),
                   ),
-                  
+
                   SizedBox(height: 24.h),
                   Text(
                     'Select Payment Method',
-                    style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold, color: Colors.black87),
+                    style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87),
                   ),
                   SizedBox(height: 12.h),
 
@@ -359,7 +359,7 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
                     icon: Icons.date_range,
                   ),
                   SizedBox(height: 20.h),
-                  
+
                   // Trust badges
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -368,7 +368,8 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
                       SizedBox(width: 6.w),
                       Text(
                         '100% Secure Payments by EcoBharatPay',
-                        style: TextStyle(fontSize: 11.sp, color: Colors.grey[500]),
+                        style:
+                            TextStyle(fontSize: 11.sp, color: Colors.grey[500]),
                       ),
                     ],
                   ),
@@ -376,16 +377,22 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
                   // Demo control: simulates a rural weak-network timeout so
                   // the State 5 (ERROR RECOVERY) path can be exercised.
                   InkWell(
-                    onTap: () => setState(() => _simulateWeakNetwork = !_simulateWeakNetwork),
+                    onTap: () => setState(
+                        () => _simulateWeakNetwork = !_simulateWeakNetwork),
                     borderRadius: BorderRadius.circular(10.r),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            _simulateWeakNetwork ? Icons.toggle_on : Icons.toggle_off,
-                            color: _simulateWeakNetwork ? Colors.amber.shade800 : Colors.grey,
+                            _simulateWeakNetwork
+                                ? Icons.toggle_on
+                                : Icons.toggle_off,
+                            color: _simulateWeakNetwork
+                                ? Colors.amber.shade800
+                                : Colors.grey,
                             size: 22.r,
                           ),
                           SizedBox(width: 6.w),
@@ -393,7 +400,9 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
                             'Simulate weak network (demo)',
                             style: TextStyle(
                               fontSize: 11.sp,
-                              color: _simulateWeakNetwork ? Colors.amber.shade800 : Colors.grey[500],
+                              color: _simulateWeakNetwork
+                                  ? Colors.amber.shade800
+                                  : Colors.grey[500],
                             ),
                           ),
                         ],
@@ -405,7 +414,7 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
               ),
             ),
           ),
-          
+
           // Bottom Pay Button
           Container(
             padding: EdgeInsets.all(16.r),
@@ -429,13 +438,16 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
                       style: FilledButton.styleFrom(
                         backgroundColor: _stateColor,
                         padding: EdgeInsets.symmetric(vertical: 14.h),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r)),
                       ),
                       // Locked in OPTIMISTIC LOCK / PROCESSING / SUCCESS.
-                      onPressed: (_state == _PayState.idle || _state == _PayState.error)
+                      onPressed: (_state == _PayState.idle ||
+                              _state == _PayState.error)
                           ? _processPayment
                           : null,
-                      child: (_state == _PayState.optimisticLock || _state == _PayState.processing)
+                      child: (_state == _PayState.optimisticLock ||
+                              _state == _PayState.processing)
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -478,7 +490,8 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
                           padding: EdgeInsets.symmetric(vertical: 12.h),
                         ),
                         onPressed: _retryOfflineUssd,
-                        icon: const Icon(Icons.sms_outlined, color: _amber, size: 18),
+                        icon: const Icon(Icons.sms_outlined,
+                            color: _amber, size: 18),
                         label: const Text(
                           'Retry via Offline USSD / Fallback',
                           style: TextStyle(
@@ -505,14 +518,15 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
     required IconData icon,
   }) {
     final isSelected = _selectedMethod == id;
-    
+
     return InkWell(
       onTap: () => setState(() => _selectedMethod = id),
       borderRadius: BorderRadius.circular(12.r),
       child: Container(
         padding: EdgeInsets.all(16.r),
         decoration: BoxDecoration(
-          color: isSelected ? _primaryGreen.withValues(alpha: 0.05) : Colors.white,
+          color:
+              isSelected ? _primaryGreen.withValues(alpha: 0.05) : Colors.white,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
             color: isSelected ? _primaryGreen : Colors.grey.shade300,
@@ -524,7 +538,9 @@ class _EcoBharatPayScreenState extends State<EcoBharatPayScreen> {
             Container(
               padding: EdgeInsets.all(10.r),
               decoration: BoxDecoration(
-                color: isSelected ? _primaryGreen.withValues(alpha: 0.1) : Colors.grey.shade100,
+                color: isSelected
+                    ? _primaryGreen.withValues(alpha: 0.1)
+                    : Colors.grey.shade100,
                 shape: BoxShape.circle,
               ),
               child: Icon(

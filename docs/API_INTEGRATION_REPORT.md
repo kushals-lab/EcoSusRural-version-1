@@ -9,7 +9,7 @@
 
 ### A. Ministry of Agriculture & Farmers Welfare — Mandi Price API
 - **Endpoint:** `https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070`
-- **Provided API Key:** `579b464db66ec23bdd000001620103ec09ca47b67a8c40c431d19bb1`
+- **Provided API Key:** `[configured in backend/.env.local]`
 - **Data Attributes Returned:**
   - `state`, `district`, `market` (e.g. Maddipadu APMC, Mukkom Market)
   - `commodity`, `variety`, `grade` (e.g. Bengal Gram, Bhindi, Potato)

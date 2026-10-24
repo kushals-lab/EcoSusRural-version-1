@@ -71,7 +71,7 @@ class DriedFruitUnitPage extends StatelessWidget {
                 color: kHubGreen)),
         centerTitle: true,
       ),
-      body: ListView(
+      body: SafeArea(child: ListView(
         padding: EdgeInsets.all(16.r),
         children: [
           const OrganicTagNotice(),
@@ -83,7 +83,7 @@ class DriedFruitUnitPage extends StatelessWidget {
           const LabReportChecklist(requirements: kDriedFruitLabReports),
           SizedBox(height: 20.h),
         ],
-      ),
+      )),
     );
   }
 }

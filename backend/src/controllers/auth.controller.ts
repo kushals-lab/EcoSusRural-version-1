@@ -3,6 +3,8 @@ import { EmailValidationService } from '../services/emailValidation.service';
 import { OtpService } from '../services/otp.service';
 import { SendOtpRequestBody, VerifyOtpRequestBody } from '../types/auth.types';
 
+const { createEmailSession } = require('../../src/services/emailSession');
+
 export class AuthController {
   /**
    * POST /api/v1/auth/send-otp
@@ -50,12 +52,13 @@ export class AuthController {
         message: dispatchResult.message,
         email: validationResult.normalizedEmail,
         cooldownSeconds: dispatchResult.cooldownSeconds,
+        expiresInSeconds: dispatchResult.expiresInSeconds,
       });
     } catch (error: any) {
-      console.error('[AuthController.sendOtp] Internal error:', error);
-      res.status(500).json({
+      console.warn('[AuthController.sendOtp] Mail delivery or account storage unavailable.');
+      res.status(503).json({
         success: false,
-        message: 'An internal server error occurred while processing your request.',
+        message: 'Email sign-in is temporarily unavailable. Please try again later.',
       });
     }
   }
@@ -116,16 +119,14 @@ export class AuthController {
         return;
       }
 
-      res.status(200).json({
-        success: true,
-        message: verificationResult.message,
-        verificationToken: verificationResult.verificationToken,
-      });
+      const session = await createEmailSession(normalizedEmail);
+      res.status(200).json({ success: true, message: verificationResult.message,
+        verificationToken: verificationResult.verificationToken, ...session });
     } catch (error: any) {
-      console.error('[AuthController.verifyOtp] Internal error:', error);
-      res.status(500).json({
+      console.warn('[AuthController.verifyOtp] Account storage unavailable.');
+      res.status(503).json({
         success: false,
-        message: 'An internal server error occurred during OTP verification.',
+        message: 'Email sign-in is temporarily unavailable. Please try again later.',
       });
     }
   }

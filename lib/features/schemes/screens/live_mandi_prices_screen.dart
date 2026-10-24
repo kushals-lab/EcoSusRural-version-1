@@ -39,9 +39,9 @@ class MandiPriceRecord {
       variety: json['variety'] as String? ?? '',
       grade: json['grade'] as String? ?? '',
       arrivalDate: json['arrival_date'] as String? ?? '',
-      minPrice: (json['min_price'] as num?)?.toDouble() ?? 0.0,
-      maxPrice: (json['max_price'] as num?)?.toDouble() ?? 0.0,
-      modalPrice: (json['modal_price'] as num?)?.toDouble() ?? 0.0,
+      minPrice: double.tryParse(json['min_price']?.toString() ?? '') ?? double.nan,
+      maxPrice: double.tryParse(json['max_price']?.toString() ?? '') ?? double.nan,
+      modalPrice: double.tryParse(json['modal_price']?.toString() ?? '') ?? double.nan,
     );
   }
 }
@@ -50,14 +50,17 @@ class LiveMandiPricesScreen extends ConsumerStatefulWidget {
   const LiveMandiPricesScreen({super.key});
 
   @override
-  ConsumerState<LiveMandiPricesScreen> createState() => _LiveMandiPricesScreenState();
+  ConsumerState<LiveMandiPricesScreen> createState() =>
+      _LiveMandiPricesScreenState();
 }
 
 class _LiveMandiPricesScreenState extends ConsumerState<LiveMandiPricesScreen> {
   bool _isLoading = true;
   String? _errorMessage;
-  final String _dataSource = 'Ministry of Agriculture & Farmers Welfare (data.gov.in)';
-  String? _updatedDate;
+  String _dataSource =
+      'Ministry of Agriculture & Farmers Welfare (data.gov.in)';
+  String? _sourceReportedAt;
+  String? _lastSyncedAt;
   bool _isOfflineCache = false;
   List<MandiPriceRecord> _records = [];
   String _searchQuery = '';
@@ -87,17 +90,22 @@ class _LiveMandiPricesScreenState extends ConsumerState<LiveMandiPricesScreen> {
             .map((r) => MandiPriceRecord.fromJson(r as Map<String, dynamic>))
             .toList();
 
+        if (!mounted) return;
         setState(() {
           _records = list;
           _isLoading = false;
-          _isOfflineCache = res['_isOfflineCache'] == true;
-          _updatedDate = res['updated_date'] as String? ?? res['_cachedAt'] as String?;
+          _isOfflineCache = res['_isOfflineCache'] == true || res['_isCache'] == true || res['cache_status'] != 'fresh';
+          _dataSource = res['source'] as String? ?? _dataSource;
+          _sourceReportedAt = res['source_reported_at'] as String?;
+          _lastSyncedAt =
+              (res['last_synced_at'] ?? res['_cachedAt']) as String?;
         });
         return;
       }
 
       throw Exception('Malformed data from server');
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
         _errorMessage = e.toString();
@@ -120,7 +128,7 @@ class _LiveMandiPricesScreenState extends ConsumerState<LiveMandiPricesScreen> {
       backgroundColor: const Color(0xFFF9F9F6),
       appBar: AppBar(
         title: Text(
-          'Live Mandi Daily Prices',
+          'Reported Mandi Daily Prices',
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.bold,
@@ -147,7 +155,8 @@ class _LiveMandiPricesScreenState extends ConsumerState<LiveMandiPricesScreen> {
               color: Colors.white,
               child: Row(
                 children: [
-                  Icon(Icons.location_on, color: Colors.green.shade800, size: 20.sp),
+                  Icon(Icons.location_on,
+                      color: Colors.green.shade800, size: 20.sp),
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Column(
@@ -165,7 +174,8 @@ class _LiveMandiPricesScreenState extends ConsumerState<LiveMandiPricesScreen> {
                           location.isPermissionGranted
                               ? 'GPS Located Market: ${location.marketName}'
                               : 'Manual / Default Market Selection',
-                          style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600),
+                          style: TextStyle(
+                              fontSize: 11.sp, color: Colors.grey.shade600),
                         ),
                       ],
                     ),
@@ -173,7 +183,8 @@ class _LiveMandiPricesScreenState extends ConsumerState<LiveMandiPricesScreen> {
                   OutlinedButton(
                     onPressed: () => _showLocationSelector(context),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                       side: BorderSide(color: Colors.green.shade800),
                     ),
                     child: Text('Change', style: TextStyle(fontSize: 12.sp)),
@@ -186,23 +197,28 @@ class _LiveMandiPricesScreenState extends ConsumerState<LiveMandiPricesScreen> {
             Container(
               width: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-              color: _isOfflineCache ? Colors.amber.shade50 : Colors.green.shade50,
+              color:
+                  _isOfflineCache ? Colors.amber.shade50 : Colors.green.shade50,
               child: Row(
                 children: [
                   Icon(
                     _isOfflineCache ? Icons.history : Icons.verified,
                     size: 14.sp,
-                    color: _isOfflineCache ? Colors.amber.shade900 : Colors.green.shade800,
+                    color: _isOfflineCache
+                        ? Colors.amber.shade900
+                        : Colors.green.shade800,
                   ),
                   SizedBox(width: 6.w),
                   Expanded(
                     child: Text(
                       _isOfflineCache
-                          ? 'Offline Cache: Saved on ${_updatedDate ?? "Earlier"}'
-                          : 'Live Source: ${_updatedDate ?? "Current Date"} ($_dataSource)',
+                          ? 'Saved data — not live. Last successful sync: ${_formatTimestamp(_lastSyncedAt)}'
+                          : 'Latest fetched dataset: $_dataSource\nDataset updated: ${_formatTimestamp(_sourceReportedAt)} • Fetched: ${_formatTimestamp(_lastSyncedAt)}',
                       style: TextStyle(
                         fontSize: 11.sp,
-                        color: _isOfflineCache ? Colors.amber.shade900 : Colors.green.shade900,
+                        color: _isOfflineCache
+                            ? Colors.amber.shade900
+                            : Colors.green.shade900,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -239,13 +255,18 @@ class _LiveMandiPricesScreenState extends ConsumerState<LiveMandiPricesScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.cloud_off, size: 48.sp, color: Colors.grey),
+                              Icon(Icons.cloud_off,
+                                  size: 48.sp, color: Colors.grey),
                               SizedBox(height: 12.h),
                               Text('Unable to reach Mandi service',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14.sp)),
                               SizedBox(height: 6.h),
                               Text(_errorMessage!,
-                                  style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600)),
+                                  style: TextStyle(
+                                      fontSize: 11.sp,
+                                      color: Colors.grey.shade600)),
                               SizedBox(height: 12.h),
                               ElevatedButton(
                                 onPressed: _fetchMandiPrices,
@@ -271,7 +292,8 @@ class _LiveMandiPricesScreenState extends ConsumerState<LiveMandiPricesScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           rec.commodity,
@@ -301,7 +323,8 @@ class _LiveMandiPricesScreenState extends ConsumerState<LiveMandiPricesScreen> {
                                     ),
                                     SizedBox(height: 6.h),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           'Min: ₹${rec.minPrice.toStringAsFixed(0)} | Max: ₹${rec.maxPrice.toStringAsFixed(0)}',
@@ -332,6 +355,14 @@ class _LiveMandiPricesScreenState extends ConsumerState<LiveMandiPricesScreen> {
     );
   }
 
+  String _formatTimestamp(String? raw) {
+    if (raw == null) return 'not available';
+    final value = DateTime.tryParse(raw)?.toLocal();
+    if (value == null) return raw;
+    final localizations = MaterialLocalizations.of(context);
+    return '${localizations.formatMediumDate(value)} ${localizations.formatTimeOfDay(TimeOfDay.fromDateTime(value))}';
+  }
+
   void _showLocationSelector(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -344,7 +375,8 @@ class _LiveMandiPricesScreenState extends ConsumerState<LiveMandiPricesScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Select Market or District',
-                  style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                  style:
+                      TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
               SizedBox(height: 12.h),
               ListTile(
                 leading: const Icon(Icons.my_location, color: Colors.green),
@@ -363,7 +395,8 @@ class _LiveMandiPricesScreenState extends ConsumerState<LiveMandiPricesScreen> {
               ),
               const Divider(),
               Text('Frequent Agricultural Districts:',
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade700)),
+                  style:
+                      TextStyle(fontSize: 12.sp, color: Colors.grey.shade700)),
               SizedBox(height: 8.h),
               ListTile(
                 title: const Text('Prakasam (Andhra Pradesh)'),

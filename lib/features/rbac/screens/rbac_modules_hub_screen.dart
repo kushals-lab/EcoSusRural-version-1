@@ -29,7 +29,7 @@ class RbacModulesHubScreen extends StatefulWidget {
 class _RbacModulesHubScreenState extends State<RbacModulesHubScreen> {
   static const Color _primaryGreen = Color(0xFF1B4D3E);
 
-  EcoRole _role = EcoRole.farmer;
+  EcoRole _role = EcoRole.buyer;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +66,7 @@ class _RbacModulesHubScreenState extends State<RbacModulesHubScreen> {
               }).toList(),
             ),
             SizedBox(height: 6.h),
-            Text('Identity metric: ${_role.identityMetric}',
+            Text('Role: ${_role.label}',
                 style: TextStyle(fontSize: 11.sp, color: Colors.grey[600])),
             SizedBox(height: 16.h),
             Text('Category-Restricted Modules',
@@ -86,7 +86,8 @@ class _RbacModulesHubScreenState extends State<RbacModulesHubScreen> {
   }
 
   Widget _moduleCard(RestrictedModule m) {
-    final allowed = _role == m.allowedRole;
+    final allowed = moduleAllowed(_role, m);
+    final allowedRoleLabels = m.allowedRoles.map((role) => role.label).join(' or ');
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(14.r),
@@ -123,7 +124,7 @@ class _RbacModulesHubScreenState extends State<RbacModulesHubScreen> {
           SizedBox(height: 8.h),
           Text(m.subtitle, style: TextStyle(fontSize: 11.sp, color: Colors.grey[600], height: 1.4)),
           SizedBox(height: 4.h),
-          Text('Access restricted to: ${m.allowedRole.label} only',
+          Text('Access restricted to: $allowedRoleLabels',
               style: TextStyle(fontSize: 11.sp, color: m.color, fontWeight: FontWeight.w600)),
           SizedBox(height: 10.h),
           SizedBox(
@@ -144,11 +145,11 @@ class _RbacModulesHubScreenState extends State<RbacModulesHubScreen> {
   }
 
   void _openModule(RestrictedModule m) {
-    if (_role != m.allowedRole) {
+    if (!moduleAllowed(_role, m)) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         backgroundColor: Colors.orange.shade800,
         content: Text(
-            '${m.title} is exclusive to ${m.allowedRole.label} accounts. Switch persona to continue.'),
+            '${m.title} is for ${m.allowedRoles.map((role) => role.label).join(' or ')} accounts. Switch persona to continue.'),
       ));
       return;
     }

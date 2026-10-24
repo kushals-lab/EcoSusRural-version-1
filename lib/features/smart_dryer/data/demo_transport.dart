@@ -94,5 +94,5 @@ class DemoDryerTransport extends DryerTransport {
       _fault = false;
     }
   }
-  void dispose() { _timer?.cancel(); _ctrl.close(); }
+  @override void dispose() { _connected = false; _timer?.cancel(); _ctrl.close(); }
 }

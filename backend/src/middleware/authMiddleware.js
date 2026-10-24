@@ -7,8 +7,9 @@
 /// tokens carry purpose=email_verification and cannot be used as sessions).
 const jwt = require('jsonwebtoken');
 const { jwtSecret } = require('../security/secrets');
+const { getCollection } = require('../db/mongodb');
 
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
     const header = req.headers['authorization'] || '';
     const [scheme, token] = header.split(' ');
 
@@ -21,7 +22,15 @@ function authMiddleware(req, res, next) {
         if (payload.purpose && payload.purpose !== 'access') {
             return res.status(403).json({ error: 'Token not valid for this operation' });
         }
-        req.auth = { sub: payload.sub, email: payload.email, purpose: payload.purpose || 'access' };
+        if (payload.provider === 'google' || payload.provider === 'email_otp') {
+            if (typeof payload.jti !== 'string') return res.status(401).json({ error: 'Invalid session' });
+            let user;
+            try {
+                user = await (await getCollection('users')).findOne({ id: payload.sub }, { projection: { activeSessionId: 1 } });
+            } catch (_) { return res.status(503).json({ error: 'Session storage unavailable' }); }
+            if (user?.activeSessionId !== payload.jti) return res.status(401).json({ error: 'Session expired' });
+        }
+        req.auth = { sub: payload.sub, email: payload.email, purpose: payload.purpose || 'access', sessionId: payload.jti };
         next();
     } catch (err) {
         const message =

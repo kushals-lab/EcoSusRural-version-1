@@ -1,6 +1,7 @@
 /// Smart Dryer telemetry snapshot. Pure Dart, no Flutter import.
 /// v2: adds inlet/exhaust/battery while keeping v1 fields for compat.
 library;
+import 'dryer_simulation.dart';
 class DryerReading {
   final double? collectorTempC;
   final double? chamberTempC;
@@ -22,6 +23,7 @@ class DryerReading {
   final bool? charging;
   final String? mode;
   final String? bayId;
+  final DryerSimulationSnapshot? simulation;
   const DryerReading({
     this.collectorTempC, this.chamberTempC, this.ambientTempC,
     this.chamberRhPct, this.ambientRhPct, this.airflowM3h,
@@ -30,6 +32,7 @@ class DryerReading {
     this.inletTempC, this.exhaustTempC, this.exhaustRhPct,
     this.batteryVoltageV, this.batterySocPct, this.charging,
     this.mode, this.bayId,
+    this.simulation,
   });
   double? get internalTempC => chamberTempC;
   double? get internalRhPct => chamberRhPct;
@@ -43,6 +46,7 @@ class DryerReading {
     'exhaustRhPct': exhaustRhPct, 'batteryVoltageV': batteryVoltageV,
     'batterySocPct': batterySocPct, 'charging': charging,
     'mode': mode, 'bayId': bayId,
+    if (simulation != null) 'simulation': simulation!.toMap(),
   };
   factory DryerReading.fromMap(Map<String, dynamic> m) => DryerReading(
     collectorTempC: (m['collectorTempC'] as num?)?.toDouble(),
@@ -64,6 +68,7 @@ class DryerReading {
     charging: m['charging'] as bool?,
     mode: m['mode'] as String?,
     bayId: m['bayId'] as String?,
+    simulation: m['simulation'] is Map ? DryerSimulationSnapshot.fromMap(Map<String, dynamic>.from(m['simulation'] as Map)) : null,
   );
 }
 

@@ -1,14 +1,14 @@
 /// Dryer access roles mapped onto existing EcoSusRural personas.
 library;
-import '../../../core/rbac/rbac.dart';
 enum DryerAccess { viewer, operator, admin }
-DryerAccess dryerAccessFor(EcoRole role) {
-  switch (role) {
-    case EcoRole.farmer: return DryerAccess.operator;
-    case EcoRole.msme: return DryerAccess.operator;
-    case EcoRole.organization: return DryerAccess.admin;
-    case EcoRole.artisan: return DryerAccess.viewer;
-    case EcoRole.buyer: return DryerAccess.viewer;
+DryerAccess dryerAccessFor(String roleName) {
+  switch (roleName) {
+    case 'farmer': return DryerAccess.operator;
+    case 'msme': return DryerAccess.operator;
+    case 'organization': return DryerAccess.admin;
+    case 'artisan': return DryerAccess.viewer;
+    case 'buyer': return DryerAccess.viewer;
+    default: return DryerAccess.viewer;
   }
 }
 extension DryerAccessX on DryerAccess {
