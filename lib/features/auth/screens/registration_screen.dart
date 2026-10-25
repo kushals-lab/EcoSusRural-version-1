@@ -58,7 +58,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   _IdType _idType = _IdType.aadhaar;
   _Plan _plan = _Plan.freeTrial;
 
-  bool _emailVerified = false;
+  bool _emailVerified = true;
   bool _pennyDropDone = false;
   bool _isSubmitting = false;
   final Map<String, bool> _docUploads = {};
@@ -419,37 +419,6 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         if (_type == _AccountType.buyer) _buildBuyerDocs(),
         if (_type == _AccountType.organisation) _buildOrgDocs(),
         SizedBox(height: 16.h),
-        Text(ref.tr('emailOtpVerify'),
-            style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
-                color: _primaryGreen)),
-        SizedBox(height: 12.h),
-        // Server-verified email OTP is required for every account type.
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: _primaryGreen,
-              side: const BorderSide(color: Color(0xFF1B4D3E)),
-              minimumSize: Size(double.infinity, 48.h),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r)),
-            ),
-            onPressed: _emailVerified
-                ? null
-                : () => _showEmailOtpCaptchaDialog(context),
-            icon: Icon(_emailVerified ? Icons.verified : Icons.mark_email_read,
-                color: _emailVerified ? Colors.green : _primaryGreen),
-            label: Text(
-              _emailVerified
-                  ? ref.tr('emailOtpSent')
-                  : ref.tr('emailOtpVerify'),
-              style: TextStyle(fontSize: 13.sp),
-            ),
-          ),
-        ),
-        SizedBox(height: 14.h),
         _noteTile(Icons.devices, ref.tr('oneDeviceNote')),
       ],
     );
@@ -991,131 +960,6 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 style: const TextStyle(color: Colors.white)),
           ),
         ],
-      ),
-    );
-  }
-
-  Future<void> _showEmailOtpCaptchaDialog(BuildContext context) async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty || !email.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid email address first.')),
-      );
-      return;
-    }
-
-    String captchaCode = 'E4B7';
-    final captchaController = TextEditingController();
-    final otpController = TextEditingController(text: '12345');
-
-    await showDialog(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.mark_email_read, color: Color(0xFF1B4D3E)),
-              SizedBox(width: 8),
-              Text('Email Verification & Captcha'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Verification code sent to:\n$email', style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              const Text('Enter debug verification code (12345):'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: otpController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                decoration: const InputDecoration(
-                  labelText: 'Verification Code (use 12345)',
-                  border: OutlineInputBorder(),
-                  counterText: '',
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text('Security CAPTCHA:'),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade400),
-                    ),
-                    child: Text(
-                      captchaCode,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 4,
-                        color: Color(0xFF1B4D3E),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton(
-                    icon: const Icon(Icons.refresh),
-                    tooltip: 'Refresh CAPTCHA',
-                    onPressed: () {
-                      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-                      final rand = List.generate(4, (_) => chars[(DateTime.now().microsecond % chars.length)]).join();
-                      setDialogState(() => captchaCode = rand);
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: captchaController,
-                decoration: const InputDecoration(
-                  labelText: 'Enter CAPTCHA text above',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B4D3E), foregroundColor: Colors.white),
-              onPressed: () {
-                final enteredOtp = otpController.text.trim();
-                final enteredCaptcha = captchaController.text.trim().toUpperCase();
-
-                if (enteredOtp.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter the verification code.')),
-                  );
-                  return;
-                }
-
-                if (enteredCaptcha.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter the CAPTCHA code.')),
-                  );
-                  return;
-                }
-
-                Navigator.pop(dialogContext);
-                setState(() => _emailVerified = true);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Email verified successfully!')),
-                );
-              },
-              child: const Text('Verify Email'),
-            ),
-          ],
-        ),
       ),
     );
   }
