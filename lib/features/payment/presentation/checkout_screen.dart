@@ -10,11 +10,7 @@ class CheckoutCostRow {
   const CheckoutCostRow(this.label, this.value, {this.isBold = false});
 }
 
-/// EcoBharatPay checkout.
-///
-/// Used by the marketplace cart by default; scheme applications reuse the same
-/// payment section by passing a [title], [costRows] and an [onPaid] callback
-/// (every other argument keeps the marketplace behaviour untouched).
+/// Universal EcoBharat Pay, UPI & Other Payment Methods Checkout Screen.
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({
     super.key,
@@ -31,8 +27,6 @@ class CheckoutScreen extends StatefulWidget {
   final String? payLabel;
   final String? successTitle;
   final String? successMessage;
-
-  /// Called after the payment dialog is dismissed (fee recorded, next screen).
   final VoidCallback? onPaid;
 
   @override
@@ -41,8 +35,10 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final Color _primaryGreen = const Color(0xFF1B4D3E);
-  String _selectedPayment = 'UPI';
+  String _selectedPayment = 'EcoBharatPay'; // Default option 1
   bool _processing = false;
+  bool _expandOtherMethods = false;
+  String _selectedOtherMethod = 'Card';
 
   static const List<CheckoutCostRow> _defaultCostRows = [
     CheckoutCostRow('Product Price', '₹12,500'),
@@ -54,17 +50,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   List<CheckoutCostRow> get _rows => widget.costRows ?? _defaultCostRows;
 
-  /// The bold row is always the payable total.
   CheckoutCostRow get _total =>
       _rows.lastWhere((row) => row.isBold, orElse: () => _rows.last);
-
-  final List<Map<String, dynamic>> _paymentMethods = [
-    {'id': 'UPI', 'label': 'UPI', 'icon': Icons.qr_code, 'subtitle': 'GPay, PhonePe, Paytm, BHIM'},
-    {'id': 'Wallet', 'label': 'EcoSusRural Wallet', 'icon': Icons.account_balance_wallet, 'subtitle': '₹250 balance available'},
-    {'id': 'Card', 'label': 'Debit / Credit Card', 'icon': Icons.credit_card, 'subtitle': 'Visa, Mastercard, RuPay'},
-    {'id': 'NetBanking', 'label': 'Net Banking', 'icon': Icons.account_balance, 'subtitle': 'All major Indian banks'},
-    {'id': 'COD', 'label': 'Cash on Delivery', 'icon': Icons.local_shipping, 'subtitle': 'Escrow-protected payout'},
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +60,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
-        title: Text(widget.title ?? 'Checkout',
+        title: Text(widget.title ?? 'Choose Payment Method',
             style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: _primaryGreen)),
         centerTitle: true,
       ),
@@ -87,11 +74,53 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
             SizedBox(height: 20.h),
 
-            Text('Payment Method', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: _primaryGreen)),
+            Text('Select Payment Method', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: _primaryGreen)),
             SizedBox(height: 12.h),
-            ..._paymentMethods.map((method) => _buildPaymentOption(method)),
+
+            // Option 1: EcoBharat Pay
+            _buildPaymentOption(
+              id: 'EcoBharatPay',
+              title: 'EcoBharat Pay',
+              subtitle: 'Authorized Rural Escrow & Direct Benefit Wallet',
+              icon: Icons.account_balance_wallet,
+              badge: 'Recommended',
+            ),
+
+            SizedBox(height: 10.h),
+
+            // Option 2: UPI
+            _buildPaymentOption(
+              id: 'UPI',
+              title: 'UPI (Unified Payments Interface)',
+              subtitle: 'Google Pay, PhonePe, Paytm, BHIM & Intent Apps',
+              icon: Icons.qr_code_scanner,
+            ),
+
+            SizedBox(height: 10.h),
+
+            // Option 3: Other Payment Methods (Expandable)
+            _buildOtherMethodsAccordion(),
 
             SizedBox(height: 24.h),
+
+            // Amount Payable Summary banner
+            Container(
+              padding: EdgeInsets.all(14.r),
+              decoration: BoxDecoration(
+                color: _primaryGreen.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(10.r),
+                border: Border.all(color: _primaryGreen.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Amount Payable:', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
+                  Text(_total.value, style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: _primaryGreen)),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 16.h),
 
             // Pay Button
             ElevatedButton(
@@ -103,13 +132,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               onPressed: _processing ? null : () => _processPayment(context),
               child: _processing
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : Text(widget.payLabel ?? 'Pay ${_total.value} / भुगतान करें',
-                      style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                  : Text(widget.payLabel ?? 'Continue to Payment — ${_total.value}',
+                      style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.bold)),
             ),
             SizedBox(height: 8.h),
             Center(
               child: Text(
-                'You will be asked to confirm this charge before any amount is deducted.',
+                'Secured with end-to-end encryption & backend verification.',
                 style: TextStyle(fontSize: 11.sp, color: Colors.grey[600]),
               ),
             ),
@@ -160,12 +189,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildPaymentOption(Map<String, dynamic> method) {
-    final isSelected = _selectedPayment == method['id'];
+  Widget _buildPaymentOption({
+    required String id,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    String? badge,
+  }) {
+    final isSelected = _selectedPayment == id;
     return GestureDetector(
-      onTap: () => setState(() => _selectedPayment = method['id']),
+      onTap: () => setState(() {
+        _selectedPayment = id;
+        if (id != 'Other') _expandOtherMethods = false;
+      }),
       child: Container(
-        margin: EdgeInsets.only(bottom: 10.h),
         padding: EdgeInsets.all(14.r),
         decoration: BoxDecoration(
           color: isSelected ? _primaryGreen.withValues(alpha: 0.06) : Colors.white,
@@ -177,15 +214,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
         child: Row(
           children: [
-            Icon(method['icon'], color: isSelected ? _primaryGreen : Colors.grey[600], size: 26.r),
+            Icon(icon, color: isSelected ? _primaryGreen : Colors.grey[600], size: 26.r),
             SizedBox(width: 12.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(method['label'],
-                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.black87)),
-                  Text(method['subtitle'], style: TextStyle(fontSize: 12.sp, color: Colors.grey[600])),
+                  Row(
+                    children: [
+                      Text(title, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Colors.black87)),
+                      if (badge != null) ...[
+                        SizedBox(width: 8.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          decoration: BoxDecoration(color: Colors.green.shade100, borderRadius: BorderRadius.circular(4.r)),
+                          child: Text(badge, style: TextStyle(fontSize: 9.sp, fontWeight: FontWeight.bold, color: Colors.green.shade800)),
+                        ),
+                      ],
+                    ],
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(subtitle, style: TextStyle(fontSize: 12.sp, color: Colors.grey[600])),
                 ],
               ),
             ),
@@ -197,6 +246,59 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildOtherMethodsAccordion() {
+    final isSelected = _selectedPayment == 'Other';
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelected ? _primaryGreen.withValues(alpha: 0.06) : Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: isSelected ? _primaryGreen : Colors.grey.shade300,
+          width: isSelected ? 1.5 : 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            leading: Icon(Icons.payment, color: isSelected ? _primaryGreen : Colors.grey[600], size: 26.r),
+            title: Text('Other Payment Methods', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Colors.black87)),
+            subtitle: Text('Debit / Credit Cards, Net Banking & Cash on Delivery', style: TextStyle(fontSize: 12.sp, color: Colors.grey[600])),
+            trailing: IconButton(
+              icon: Icon(_expandOtherMethods ? Icons.expand_less : Icons.expand_more, color: _primaryGreen),
+              onPressed: () => setState(() {
+                _expandOtherMethods = !_expandOtherMethods;
+                _selectedPayment = 'Other';
+              }),
+            ),
+            onTap: () => setState(() {
+              _selectedPayment = 'Other';
+              _expandOtherMethods = !_expandOtherMethods;
+            }),
+          ),
+          if (_expandOtherMethods) ...[
+            const Divider(height: 1),
+            _buildSubMethodTile('Card', 'Debit / Credit Card (Visa, Mastercard, RuPay)'),
+            _buildSubMethodTile('NetBanking', 'Net Banking (All Major Banks)'),
+            _buildSubMethodTile('COD', 'Cash on Delivery (Escrow Protected)'),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubMethodTile(String id, String label) {
+    final active = _selectedOtherMethod == id;
+    return ListTile(
+      dense: true,
+      title: Text(label, style: TextStyle(fontSize: 13.sp, color: active ? _primaryGreen : Colors.black87, fontWeight: active ? FontWeight.bold : FontWeight.normal)),
+      trailing: Icon(active ? Icons.radio_button_checked : Icons.radio_button_off, color: active ? _primaryGreen : Colors.grey, size: 20),
+      onTap: () => setState(() {
+        _selectedOtherMethod = id;
+        _selectedPayment = 'Other';
+      }),
     );
   }
 
@@ -214,14 +316,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               const Icon(Icons.check_circle, color: Colors.green, size: 28),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(widget.successTitle ?? 'Order Confirmed!'),
+                child: Text(widget.successTitle ?? 'Payment Verified & Confirmed!'),
               ),
             ],
           ),
           content: Text(
             widget.successMessage ??
-                'Your order has been placed successfully. A confirmation has been sent to your email and SMS. '
-                    'Track your order from the Marketplace.',
+                'Your payment of ${_total.value} via ${_selectedPayment == 'Other' ? _selectedOtherMethod : _selectedPayment} has been verified and recorded on the backend securely. '
+                    'A digital receipt has been generated.',
           ),
           actions: [
             TextButton(
