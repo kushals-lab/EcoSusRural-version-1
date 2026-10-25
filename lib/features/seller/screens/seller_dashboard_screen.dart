@@ -1,5 +1,5 @@
 import '../../auth/providers/display_name_provider.dart';
-import '../../marketplace/screens/offline_workspace_screen.dart';
+import '../../marketplace/screens/add_product_wizard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -421,9 +421,7 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
               ),
               onPressed: () {
-                // Demo catalogue drill-down (existing page): preview the
-                // first listed product instead of a dead button.
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const OfflineWorkspaceScreen()));
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const AddProductWizardScreen()));
               },
               icon: const Icon(Icons.add),
               label: Text('Add New Product',
