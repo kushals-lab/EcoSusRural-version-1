@@ -1006,7 +1006,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
 
     String captchaCode = 'E4B7';
     final captchaController = TextEditingController();
-    final otpController = TextEditingController(text: '123456');
+    final otpController = TextEditingController(text: '12345');
 
     await showDialog(
       context: context,
@@ -1025,14 +1025,14 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
             children: [
               Text('Verification code sent to:\n$email', style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
-              const Text('Enter 6-digit verification code:'),
+              const Text('Enter debug verification code (12345):'),
               const SizedBox(height: 8),
               TextField(
                 controller: otpController,
                 keyboardType: TextInputType.number,
                 maxLength: 6,
                 decoration: const InputDecoration(
-                  labelText: 'Verification Code (e.g. 123456)',
+                  labelText: 'Verification Code (use 12345)',
                   border: OutlineInputBorder(),
                   counterText: '',
                 ),
@@ -1092,9 +1092,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 final enteredOtp = otpController.text.trim();
                 final enteredCaptcha = captchaController.text.trim().toUpperCase();
 
-                if (enteredOtp.length != 6) {
+                if (enteredOtp.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a valid 6-digit verification code.')),
+                    const SnackBar(content: Text('Please enter the verification code.')),
                   );
                   return;
                 }
@@ -1109,7 +1109,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                 Navigator.pop(dialogContext);
                 setState(() => _emailVerified = true);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Email verified successfully with CAPTCHA!')),
+                  const SnackBar(content: Text('Email verified successfully!')),
                 );
               },
               child: const Text('Verify Email'),

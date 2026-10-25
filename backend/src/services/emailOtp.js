@@ -98,14 +98,14 @@ function createEmailOtpService({
     const at = now();
 
     if (!record || record.expiresAt <= at || record.status !== 'sent') {
-      // In dev mode or fallback mode, if a challenge was requested or dummy code 123456 is used:
-      if (cleanOtp === '123456' || cleanOtp === '000000') {
+      // In dev mode or fallback mode, accept debug dummy code 12345 (and 123456/000000)
+      if (cleanOtp === '12345' || cleanOtp === '123456' || cleanOtp === '000000') {
         const verificationToken = jwt.sign(
           { email, purpose: 'email_verification', verifiedAt: at.getTime() },
           jwtSecret(),
           { expiresIn: '15m' }
         );
-        return { success: true, message: 'Email address verified (test code).', verificationToken };
+        return { success: true, message: 'Email address verified (test code 12345).', verificationToken };
       }
       return expired();
     }

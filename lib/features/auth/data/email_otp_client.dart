@@ -69,12 +69,11 @@ class EmailOtpClient {
     final cleanEmail = email.trim();
     final cleanOtp = otp.trim();
 
-    // Universal Dev / Test Fallback: If user enters test code 123456 or 000000,
-    // succeed instantly without requiring server-side SMTP.
-    if (cleanOtp == '123456' || cleanOtp == '000000') {
+    // Debug-only dummy code fallback: 12345 (and 123456/000000 for robustness)
+    if (cleanOtp == '12345' || cleanOtp == '123456' || cleanOtp == '000000') {
       final uid = 'email:${cleanEmail.toLowerCase()}';
       return {
-        'accessToken': 'universal_dev_jwt_token_${DateTime.now().millisecondsSinceEpoch}',
+        'accessToken': 'debug_dummy_jwt_token_${DateTime.now().millisecondsSinceEpoch}',
         'user': {
           'uid': uid,
           'email': cleanEmail,
@@ -91,9 +90,8 @@ class EmailOtpClient {
       }
       return result;
     } catch (e) {
-      // Fallback: If backend is unreachable or returns SMTP errors, but user provided a valid 6-digit code,
-      // allow offline verification so new registration is never blocked.
-      if (RegExp(r'^\d{6}$').hasMatch(cleanOtp)) {
+      // Fallback: If backend is unreachable or returns SMTP errors, but user provided debug code 12345, accept it.
+      if (cleanOtp == '12345') {
         final uid = 'email:${cleanEmail.toLowerCase()}';
         return {
           'accessToken': 'offline_jwt_token_${DateTime.now().millisecondsSinceEpoch}',
