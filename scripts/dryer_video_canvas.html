@@ -1,0 +1,56 @@
+<!doctype html><html><meta charset="utf-8"><script src="../simulator/dryer-model.js"></script><body><canvas id="canvas" width="1280" height="720"></canvas><script>
+window.recordDryerVideo = async () => {
+  const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+  const model = new EcoDryer.DryerModel();
+  const step = (cmd, args) => { const result = model.command(cmd, args); if (!result.accepted) throw Error(result.message); };
+  step('door', {open:true}); step('pull_tray', {trayId:1});
+  step('load_tray', {trayId:1,crop:'mango',massKg:.3}); step('insert_tray', {trayId:1});
+  step('door', {open:false}); step('start');
+  const stream = canvas.captureStream(20);
+  const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(MediaRecorder.isTypeSupported);
+  if (!mime) throw Error('WebM recording is unavailable.');
+  const recorder = new MediaRecorder(stream, {mimeType:mime, videoBitsPerSecond:1800000});
+  const parts = []; recorder.ondataavailable = event => { if(event.data.size) parts.push(event.data); };
+  const finished = new Promise(resolve => recorder.onstop = resolve);
+  function box(x,y,w,h,colour,r=18) { ctx.fillStyle=colour;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill(); }
+  function text(value,x,y,size=24,colour='#173f35',weight='normal') {ctx.fillStyle=colour;ctx.font=`${weight} ${size}px Arial`;ctx.fillText(value,x,y);}
+  let frame = 0;
+  function draw() {
+    frame++;
+    model.advance(.35);
+    const s=model.snapshot();
+    box(0,0,1280,720,'#f6f7f8',0);
+    text('EcoSusRural Smart Solar Dryer',50,65,38,'#173f35','bold');
+    text('One simulation session updates the dryer and app together',50,100,20,'#64748b');
+    box(45,135,790,520,'#ffffff'); box(860,135,375,520,'#ffffff');
+    ctx.globalAlpha=.25+s.sunlight/1500;ctx.fillStyle='#f2c94c';ctx.beginPath();ctx.arc(170,240,55,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+    text(`${s.sunlight} W/m² sunlight`,80,340,20,'#89631d','bold');
+    ctx.fillStyle='#d5a34d';ctx.beginPath();ctx.moveTo(115,550);ctx.lineTo(395,320);ctx.lineTo(525,390);ctx.lineTo(245,615);ctx.closePath();ctx.fill();
+    text('SOLAR COLLECTOR',145,630,18,'#385348','bold');
+    box(530,220,260,360,'#f9fbf9',12);ctx.strokeStyle='#385348';ctx.lineWidth=4;ctx.strokeRect(530,220,260,360);
+    text('DRYING CHAMBER',548,205,18,'#385348','bold');
+    for(let i=0;i<6;i++) {
+      const y=265+i*48;ctx.strokeStyle='#91a499';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(548,y);ctx.lineTo(773,y);ctx.stroke();
+      if(i===0)for(let x=565;x<760;x+=26){ctx.fillStyle=s.progress>.5?'#b27a43':'#90a955';ctx.beginPath();ctx.arc(x,y-8,6,0,Math.PI*2);ctx.fill();}
+    }
+    ctx.strokeStyle='#df7b2f';ctx.lineWidth=5;ctx.setLineDash([12,12]);ctx.lineDashOffset=-frame*4;
+    ctx.beginPath();ctx.moveTo(475,420);ctx.lineTo(540,410);ctx.stroke();ctx.beginPath();ctx.moveTo(665,540);ctx.lineTo(665,240);ctx.stroke();
+    ctx.strokeStyle='#5c9bd5';ctx.beginPath();ctx.moveTo(665,220);ctx.lineTo(665,170);ctx.stroke();ctx.setLineDash([]);
+    text('Shared simulation',890,185,25,'#173f35','bold');
+    box(890,215,315,395,'#f8fafc',20);text('Smart Dryer · Mango',915,260,21,'#1e293b','bold');
+    text(`Chamber: ${s.chamberC.toFixed(1)} °C`,915,325,21);
+    text(`Humidity: ${s.chamberRh.toFixed(0)}%`,915,375,21);
+    text(`Airflow: ${s.airflow.toFixed(1)} m³/h`,915,425,21);
+    text(`Drying progress: ${Math.round(s.progress*100)}%`,915,475,21);
+    box(915,495,260,15,'#e5e7eb',7);box(915,495,Math.max(2,260*s.progress),15,'#2563eb',7);
+    text(`Water removed: ${s.waterRemovedKg.toFixed(3)} kg`,915,555,18);
+    text('Illustrative readings · no hardware sensors',875,635,15,'#92400e');
+  }
+  draw(); recorder.start(1000);
+  await new Promise(resolve => {const timer=setInterval(() => {draw();if(frame>=180){clearInterval(timer);recorder.stop();resolve();}},50);});
+  await finished;stream.getTracks().forEach(track=>track.stop());
+  const blob=new Blob(parts,{type:mime}); const bytes=new Uint8Array(await blob.arrayBuffer());
+  let binary=''; for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
+  return btoa(binary);
+};
+</script></body></html>
