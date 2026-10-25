@@ -1,107 +1,31 @@
-import '../../marketplace/screens/offline_workspace_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class CourseModel {
-  final String id;
-  final String title;
-  final String instructor;
-  final String category;
-  final String duration;
-  final int lessons;
-  final bool isPremium;
-  final String icon;
-  final bool isDRMProtected;
+import '../../marketplace/screens/offline_workspace_screen.dart';
+import '../../payment/presentation/checkout_screen.dart';
+import '../providers/learning_provider.dart';
+import 'course_learning_screen.dart';
+import 'my_learning_screen.dart';
 
-  const CourseModel({
-    required this.id,
-    required this.title,
-    required this.instructor,
-    required this.category,
-    required this.duration,
-    required this.lessons,
-    required this.icon,
-    this.isPremium = false,
-    this.isDRMProtected = true,
-  });
-}
-
-const List<CourseModel> kCourses = [
-  CourseModel(
-    id: 'c1',
-    title: 'Product Photography for Rural Products',
-    instructor: 'Ananya Sharma',
-    category: 'Marketing',
-    duration: '2h 30m',
-    lessons: 8,
-    icon: '📸',
-  ),
-  CourseModel(
-    id: 'c2',
-    title: 'Organic Farming Certification Process',
-    instructor: 'ICAR Institute',
-    category: 'Farming',
-    duration: '3h 15m',
-    lessons: 12,
-    icon: '🌱',
-  ),
-  CourseModel(
-    id: 'c3',
-    title: 'Digital Payments & Banking Basics',
-    instructor: 'RBI Edu Team',
-    category: 'Financial',
-    duration: '1h 45m',
-    lessons: 6,
-    icon: '💰',
-  ),
-  CourseModel(
-    id: 'c4',
-    title: 'Handicraft Quality Standards & Finishing',
-    instructor: 'Master Artisan Kailash',
-    category: 'Artisan',
-    duration: '4h',
-    lessons: 15,
-    icon: '🎨',
-    isPremium: true,
-  ),
-  CourseModel(
-    id: 'c5',
-    title: 'Export Documentation & Procedures',
-    instructor: 'DGFT Expert',
-    category: 'Trade',
-    duration: '2h',
-    lessons: 7,
-    icon: '🌍',
-    isPremium: true,
-  ),
-  CourseModel(
-    id: 'c6',
-    title: 'Sustainable Packaging & Eco Practices',
-    instructor: 'GreenPack Collective',
-    category: 'Sustainability',
-    duration: '1h 30m',
-    lessons: 5,
-    icon: '♻️',
-  ),
-];
-
-class LearningAcademyScreen extends StatefulWidget {
+class LearningAcademyScreen extends ConsumerStatefulWidget {
   const LearningAcademyScreen({super.key});
 
   @override
-  State<LearningAcademyScreen> createState() => _LearningAcademyScreenState();
+  ConsumerState<LearningAcademyScreen> createState() => _LearningAcademyScreenState();
 }
 
-class _LearningAcademyScreenState extends State<LearningAcademyScreen> {
+class _LearningAcademyScreenState extends ConsumerState<LearningAcademyScreen> {
   final Color _primaryGreen = const Color(0xFF1B4D3E);
   String _selectedCategory = 'All';
   final List<String> _categories = ['All', 'Farming', 'Artisan', 'Marketing', 'Financial', 'Trade', 'Sustainability'];
 
   @override
   Widget build(BuildContext context) {
-    final courses = _selectedCategory == 'All'
-        ? kCourses
-        : kCourses.where((c) => c.category == _selectedCategory).toList();
+    final courses = ref.watch(learningProvider);
+    final filteredCourses = _selectedCategory == 'All'
+        ? courses
+        : courses.where((c) => c.category == _selectedCategory).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F6),
@@ -113,7 +37,18 @@ class _LearningAcademyScreenState extends State<LearningAcademyScreen> {
           style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: _primaryGreen),
         ),
         centerTitle: true,
-        actions: [IconButton(icon: const Icon(Icons.offline_pin), tooltip: 'Offline learning library', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OfflineWorkspaceScreen())))],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.dashboard_outlined),
+            tooltip: 'My Learning Dashboard',
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyLearningScreen())),
+          ),
+          IconButton(
+            icon: const Icon(Icons.offline_pin),
+            tooltip: 'Offline learning library',
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OfflineWorkspaceScreen())),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -145,9 +80,9 @@ class _LearningAcademyScreenState extends State<LearningAcademyScreen> {
           Expanded(
             child: ListView.builder(
               padding: EdgeInsets.all(16.r),
-              itemCount: courses.length,
+              itemCount: filteredCourses.length,
               itemBuilder: (context, index) {
-                final course = courses[index];
+                final course = filteredCourses[index];
                 return _CourseCard(course: course);
               },
             ),
@@ -158,13 +93,13 @@ class _LearningAcademyScreenState extends State<LearningAcademyScreen> {
   }
 }
 
-class _CourseCard extends StatelessWidget {
+class _CourseCard extends ConsumerWidget {
   const _CourseCard({required this.course});
-  final CourseModel course;
+  final CourseDetail course;
   final Color _primaryGreen = const Color(0xFF1B4D3E);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
@@ -196,17 +131,11 @@ class _CourseCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Text(
-                      course.isPremium ? 'PREMIUM' : 'FREE',
+                      course.isPremium ? 'PREMIUM (₹${course.price.toInt()})' : 'FREE',
                       style: TextStyle(fontSize: 10.sp, color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
-                if (course.isDRMProtected)
-                  const Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Icon(Icons.lock, color: Colors.black45, size: 18),
-                  ),
               ],
             ),
           ),
@@ -234,16 +163,50 @@ class _CourseCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Text('${course.duration} • ${course.lessons} lessons',
+                      child: Text('${course.duration} • ${course.totalLessons} lessons • ${course.deliveryMode}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 12.sp, color: Colors.grey[700])),
+                          style: TextStyle(fontSize: 11.sp, color: Colors.grey[700])),
                     ),
                     SizedBox(width: 6.w),
-                    Text('Enroll',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 12.sp, color: _primaryGreen, fontWeight: FontWeight.bold)),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: course.isEnrolled ? Colors.green.shade700 : _primaryGreen,
+                        minimumSize: Size(80.w, 32.h),
+                        padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      ),
+                      onPressed: () {
+                        if (course.isEnrolled) {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => CourseLearningScreen(courseId: course.id)));
+                        } else if (course.isPremium) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CheckoutScreen(
+                                title: 'Enroll in ${course.title}',
+                                costRows: [
+                                  CheckoutCostRow('Course Fee', '₹${course.price.toInt()}'),
+                                  const CheckoutCostRow('Platform Access', '₹0'),
+                                  CheckoutCostRow('Total Payable', '₹${course.price.toInt()}', isBold: true),
+                                ],
+                                successTitle: 'Enrollment Confirmed!',
+                                successMessage: 'Payment verified via EcoBharat Pay. You now have full access to ${course.title}.',
+                                onPaid: () {
+                                  ref.read(learningProvider.notifier).enroll(course.id);
+                                  Navigator.pop(context);
+                                  Navigator.push(context, MaterialPageRoute(builder: (_) => CourseLearningScreen(courseId: course.id)));
+                                },
+                              ),
+                            ),
+                          );
+                        } else {
+                          ref.read(learningProvider.notifier).enroll(course.id);
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Successfully Enrolled!')));
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => CourseLearningScreen(courseId: course.id)));
+                        }
+                      },
+                      child: Text(course.isEnrolled ? 'Enrolled' : 'Enroll', style: TextStyle(fontSize: 12.sp, color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
                   ],
                 ),
               ],
