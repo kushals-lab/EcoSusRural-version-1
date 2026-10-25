@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 /// Framework controls may not have translations for every app language.
 /// Keep the app locale (and its JSON translation pack) unchanged, but load
@@ -18,16 +19,19 @@ Locale _frameworkFallback(Locale locale) {
 }
 
 class _FrameworkDelegate<T> extends LocalizationsDelegate<T> {
-  const _FrameworkDelegate(this.delegate);
+  const _FrameworkDelegate(this.delegate, {this.arbFallback = false});
 
   final LocalizationsDelegate<T> delegate;
+  final bool arbFallback;
 
   @override
   bool isSupported(Locale locale) => true;
 
   @override
   Future<T> load(Locale locale) => delegate.load(
-        delegate.isSupported(locale) ? locale : _frameworkFallback(locale),
+        delegate.isSupported(locale)
+            ? locale
+            : (arbFallback ? const Locale('en') : _frameworkFallback(locale)),
       );
 
   @override
@@ -40,4 +44,7 @@ const appLocalizationsDelegates = <LocalizationsDelegate<dynamic>>[
   _FrameworkDelegate<WidgetsLocalizations>(GlobalWidgetsLocalizations.delegate),
   _FrameworkDelegate<CupertinoLocalizations>(
       GlobalCupertinoLocalizations.delegate),
+  // ARB coverage currently targets English/Hindi. Other existing language
+  // packs stay available through the app's runtime translation engine.
+  _FrameworkDelegate<AppLocalizations>(AppLocalizations.delegate, arbFallback: true),
 ];

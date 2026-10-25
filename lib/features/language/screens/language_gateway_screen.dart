@@ -117,7 +117,11 @@ class LanguageGatewayScreen extends ConsumerWidget {
                   return Padding(
                     padding: EdgeInsets.only(right: 8.w),
                     child: ChoiceChip(
-                      label: Text(region),
+                      label: Text(ref.tr(switch (region) {
+                        'India' => 'indiaRegion',
+                        'World' => 'worldRegion',
+                        _ => 'allRegions',
+                      })),
                       selected: isSelected,
                       selectedColor: const Color(0xFF1B4D3E),
                       labelStyle: TextStyle(

@@ -1,0 +1,20 @@
+{
+  "@@locale": "en",
+  "settings": "Settings",
+  "selectLanguage": "Select Language",
+  "offlineLibraryDrafts": "Offline library & product drafts",
+  "locationPreferences": "Location preferences",
+  "remindersClock": "Reminders, alarms, timer and world clock",
+  "currentActive": "Current active: {language}",
+  "@currentActive": {"placeholders": {"language": {"type": "String"}}},
+  "notificationsAlerts": "Notifications & real-time alerts",
+  "pushNotifications": "Push notifications",
+  "lowDataMode": "Low data mode",
+  "highContrast": "High contrast & large text",
+  "biometricQuickLogin": "Biometric quick login",
+  "privacyPolicy": "Privacy policy",
+  "termsConditions": "Terms & conditions",
+  "checkUpdates": "Check for updates",
+  "logoutAction": "Log out",
+  "localRecordNotSubmitted": "Local record — not officially submitted"
+}

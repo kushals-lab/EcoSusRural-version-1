@@ -33,6 +33,9 @@ final dryerLiveProvider =
   final readingSub = repo.readings.listen((_) => notify());
   final stateSub = repo.states.listen((_) => notify());
   final timer = Timer.periodic(const Duration(seconds: 2), (_) => notify());
+  // Provider disposal can precede async* cancellation; stop the OS timer
+  // immediately so a closed screen leaves no background polling behind.
+  ref.onDispose(timer.cancel);
   DryerLiveState snapshot() => DryerLiveState(state: repo.lastState, reading: repo.lastReading,
     stale: repo.lastReading == null || DateTime.now().difference(repo.lastReading!.receivedAt).inSeconds > 30,
     transport: repo.transport.kind, deviceName: repo.transport.device?.name);

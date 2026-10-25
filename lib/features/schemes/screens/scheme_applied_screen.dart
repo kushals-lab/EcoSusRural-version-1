@@ -72,7 +72,7 @@ class SchemeAppliedScreen extends ConsumerWidget {
                 SizedBox(width: 8.w),
                 Flexible(
                   child: Text(
-                    t('appliedSuccessfully'),
+                    t('localRecordNotSubmitted'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 20.sp,
@@ -85,7 +85,7 @@ class SchemeAppliedScreen extends ConsumerWidget {
             ),
             SizedBox(height: 10.h),
             Text(
-              'Application ID ${application.id} • ${application.schemeName}',
+              '${t('localReference')} ${application.id} • ${application.schemeName}',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12.sp, color: Colors.grey[700]),
             ),
@@ -114,13 +114,13 @@ class SchemeAppliedScreen extends ConsumerWidget {
   }
 }
 
-class _AppliedSummaryCard extends StatelessWidget {
+class _AppliedSummaryCard extends ConsumerWidget {
   final SchemeApplication application;
 
   const _AppliedSummaryCard({required this.application});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
@@ -133,7 +133,7 @@ class _AppliedSummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Department', style: TextStyle(fontSize: 12.sp, color: Colors.grey[600])),
+              Text(ref.tr('department'), style: TextStyle(fontSize: 12.sp, color: Colors.grey[600])),
               Text(application.department, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold)),
             ],
           ),
@@ -141,7 +141,7 @@ class _AppliedSummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Platform Fee', style: TextStyle(fontSize: 12.sp, color: Colors.grey[600])),
+              Text(ref.tr('platformFee'), style: TextStyle(fontSize: 12.sp, color: Colors.grey[600])),
               Text('₹${application.feeInr.toStringAsFixed(2)}', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold, color: Colors.black)),
             ],
           ),
@@ -151,13 +151,13 @@ class _AppliedSummaryCard extends StatelessWidget {
   }
 }
 
-class _PayFeeButton extends StatelessWidget {
+class _PayFeeButton extends ConsumerWidget {
   final SchemeApplication application;
 
   const _PayFeeButton({required this.application});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return FilledButton.icon(
       style: FilledButton.styleFrom(
         backgroundColor: const Color(0xFF1B4D3E),
@@ -178,13 +178,14 @@ class _PayFeeButton extends StatelessWidget {
         if (!context.mounted) return;
         if (success == true) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Payment Successful!')),
+            SnackBar(content: Text(ref.read(languageProvider.notifier)
+                .translate('paymentSuccessful', ref.read(languageProvider).code))),
           );
         }
       },
       icon: const Icon(Icons.payment, color: Colors.white),
       label: Text(
-        'Pay Platform Fee',
+        ref.tr('payPlatformFee'),
         style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Colors.white),
       ),
     );

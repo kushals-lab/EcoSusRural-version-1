@@ -1,0 +1,20 @@
+{
+  "@@locale": "hi",
+  "settings": "सेटिंग्स",
+  "selectLanguage": "भाषा चुनें",
+  "offlineLibraryDrafts": "ऑफ़लाइन लाइब्रेरी और उत्पाद ड्राफ़्ट",
+  "locationPreferences": "स्थान संबंधी प्राथमिकताएँ",
+  "remindersClock": "रिमाइंडर, अलार्म, टाइमर और विश्व घड़ी",
+  "currentActive": "वर्तमान भाषा: {language}",
+  "@currentActive": {"placeholders": {"language": {"type": "String"}}},
+  "notificationsAlerts": "सूचनाएँ और ताज़ा अलर्ट",
+  "pushNotifications": "पुश सूचनाएँ",
+  "lowDataMode": "कम डेटा मोड",
+  "highContrast": "अधिक कंट्रास्ट और बड़ा पाठ",
+  "biometricQuickLogin": "बायोमेट्रिक लॉग इन",
+  "privacyPolicy": "गोपनीयता नीति",
+  "termsConditions": "नियम और शर्तें",
+  "checkUpdates": "अपडेट देखें",
+  "logoutAction": "लॉग आउट",
+  "localRecordNotSubmitted": "स्थानीय रिकॉर्ड — आधिकारिक रूप से जमा नहीं"
+}

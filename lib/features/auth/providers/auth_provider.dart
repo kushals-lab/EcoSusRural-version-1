@@ -26,6 +26,7 @@ class AppUser {
 }
 
 class AuthState {
+  final bool isRestoring;
   final bool isLoading;
   final bool otpSent;
   final String? phoneNumber;
@@ -35,6 +36,7 @@ class AuthState {
   final AppUser? user;
 
   AuthState({
+    this.isRestoring = false,
     this.isLoading = false,
     this.otpSent = false,
     this.phoneNumber,
@@ -45,6 +47,7 @@ class AuthState {
   });
 
   AuthState copyWith({
+    bool? isRestoring,
     bool? isLoading,
     bool? otpSent,
     String? phoneNumber,
@@ -56,6 +59,7 @@ class AuthState {
     bool clearVerificationId = false,
   }) {
     return AuthState(
+      isRestoring: isRestoring ?? this.isRestoring,
       isLoading: isLoading ?? this.isLoading,
       otpSent: otpSent ?? this.otpSent,
       phoneNumber: phoneNumber ?? this.phoneNumber,
@@ -78,7 +82,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier({String? testOtp, EmailOtpClient? emailOtpClient})
       : _testOtp = testOtp,
         _emailOtpClient = emailOtpClient ?? EmailOtpClient(),
-        super(AuthState()) {
+        super(AuthState(isRestoring: true)) {
     _restoreSession();
   }
 
@@ -107,8 +111,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Restores the signed-in user (if any) after an app restart.
   Future<void> _restoreSession() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_sessionKey);
+      if (raw == null || raw.isEmpty) return;
+      final parts = raw.split('|');
       final token = await _secureStorage.read(key: _tokenKey);
       if (token != null && token.isNotEmpty) {
+        if (!_tokenIsUnexpired(token)) {
+          await _secureStorage.delete(key: _tokenKey);
+          await prefs.remove(_sessionKey);
+          return;
+        }
         final client = http.Client();
         try {
           final response = await client.get(apiUri('/auth/me'),
@@ -124,7 +137,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
           }
           if (response.statusCode == 401 || response.statusCode == 403) {
             await _secureStorage.delete(key: _tokenKey);
-            final prefs = await SharedPreferences.getInstance();
             await prefs.remove(_sessionKey);
             return;
           }
@@ -133,12 +145,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
           // still verify this token on the server when connectivity returns.
           AccountSync.accessToken = token;
         } finally { client.close(); }
+        if (parts.length >= 3 && !parts[0].startsWith('local-')) {
+          final role = EcoRole.values.firstWhere(
+            (r) => r.key == parts[2], orElse: () => EcoRole.buyer);
+          AccountSync.accountId = parts[0];
+          state = state.copyWith(user: AppUser(
+            uid: parts[0], phoneNumber: parts[1], role: role));
+        }
+        return;
       }
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_sessionKey);
-      if (raw == null) return;
-      final parts = raw.split('|');
-      if (parts.length >= 2) {
+      // Never restore a server identity from unprotected preferences alone.
+      if (parts.length >= 2 && parts[0].startsWith('local-')) {
         final role = EcoRole.values.firstWhere(
           (r) => r.key == (parts.length > 2 ? parts[2] : 'buyer'),
           orElse: () => EcoRole.buyer,
@@ -148,7 +165,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
         );
       }
     } catch (_) {
-      // Storage unavailable — stay signed out.
+      // Storage unavailable: stay signed out.
+    } finally {
+      state = state.copyWith(isRestoring: false);
+    }
+  }
+
+  static bool _tokenIsUnexpired(String token) {
+    try {
+      final sections = token.split('.');
+      if (sections.length != 3) return false;
+      final payload = jsonDecode(utf8.decode(base64Url.decode(
+        base64Url.normalize(sections[1])))) as Map<String, dynamic>;
+      final expiry = payload['exp'];
+      return expiry is num &&
+          expiry.toInt() > DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    } catch (_) {
+      return false;
     }
   }
 

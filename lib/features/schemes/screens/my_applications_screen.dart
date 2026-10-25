@@ -6,6 +6,7 @@ import '../../../core/localization/language_provider.dart';
 import '../../payments/screens/eco_bharat_pay_screen.dart';
 import '../models/scheme_application_model.dart';
 import '../models/scheme_model.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class MyApplicationsScreen extends ConsumerWidget {
   const MyApplicationsScreen({super.key});
@@ -90,6 +91,8 @@ class _ApplicationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusText = switch (application.status) {
+      ApplicationStatus.localDraft => AppLocalizations.of(context)?.localRecordNotSubmitted ??
+          'Local record — not officially submitted',
       ApplicationStatus.submitted => t('statusSubmitted'),
       ApplicationStatus.underReview => t('statusUnderReview'),
       ApplicationStatus.approved => t('statusApproved'),
@@ -241,6 +244,7 @@ class _ApplicationCard extends StatelessWidget {
 
   static Color _statusColor(ApplicationStatus status) {
     return switch (status) {
+      ApplicationStatus.localDraft => Colors.blueGrey.shade600,
       ApplicationStatus.submitted => Colors.blue.shade600,
       ApplicationStatus.underReview => Colors.orange.shade600,
       ApplicationStatus.approved => Colors.green.shade600,

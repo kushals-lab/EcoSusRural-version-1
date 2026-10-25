@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../auth/providers/auth_provider.dart';
 
 import 'scheme_model.dart';
 
 /// Lifecycle of an in-app scheme application.
 enum ApplicationStatus {
+  localDraft,
   submitted,
   underReview,
   approved,
@@ -74,9 +76,9 @@ class SchemeApplication {
   /// True once the department has declared its result.
   bool get reviewComplete => !DateTime.now().isBefore(reviewAt);
 
-  ApplicationStatus get status => reviewComplete
-      ? outcome
-      : (feePaid ? ApplicationStatus.underReview : ApplicationStatus.submitted);
+  // There is no authority submission/status API in this app. Local records,
+  // including older simulated outcomes, must never claim official approval.
+  ApplicationStatus get status => ApplicationStatus.localDraft;
 
   /// Approximate calendar date by which a result is expected.
   DateTime get expectedResultAt =>
@@ -231,34 +233,40 @@ class DepartmentReview {
 
 /// Stores the user's scheme applications (persisted across restarts).
 class SchemeApplicationsNotifier extends StateNotifier<List<SchemeApplication>> {
-  SchemeApplicationsNotifier() : super(const []);
+  SchemeApplicationsNotifier(this.owner) : super(const []) { load(); }
 
-  static const String _prefsKey = 'ecosus.schemes.applications';
+  final String? owner;
+  static const _secureStorage = FlutterSecureStorage();
+  String get _storageKey => 'ecosus.schemes.applications.v2.$owner';
   bool _loaded = false;
+  Future<void> _writeTail = Future.value();
 
   Future<void> load() async {
     if (_loaded) return;
     _loaded = true;
+    if (owner == null) return;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_prefsKey);
+      final raw = await _secureStorage.read(key: _storageKey);
       if (raw == null || raw.isEmpty) return;
       final list = (jsonDecode(raw) as List)
           .map((e) => SchemeApplication.fromMap(e as Map<String, dynamic>))
           .toList();
-      state = list;
+      if (mounted) {
+        final currentIds = state.map((application) => application.id).toSet();
+        state = [...state, ...list.where((application) => !currentIds.contains(application.id))];
+      }
     } catch (_) {
       // Storage is best-effort; the in-memory list still works.
     }
   }
 
   Future<void> _persist() async {
+    if (owner == null) return;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        _prefsKey,
-        jsonEncode(state.map((a) => a.toMap()).toList()),
-      );
+      final snapshot = jsonEncode(state.map((a) => a.toMap()).toList());
+      _writeTail = _writeTail.catchError((Object _) {}).then((_) =>
+        _secureStorage.write(key: _storageKey, value: snapshot));
+      await _writeTail;
     } catch (_) {
       // Storage is best-effort.
     }
@@ -340,35 +348,13 @@ class SchemeApplicationsNotifier extends StateNotifier<List<SchemeApplication>> 
     SchemeApplication application,
     SchemeModel scheme,
   ) {
-    if (!application.reviewComplete) return application;
-    final review = DepartmentReview.decide(scheme, application.documentValues);
-    return SchemeApplication(
-      id: application.id,
-      schemeId: application.schemeId,
-      schemeName: application.schemeName,
-      schemeIcon: application.schemeIcon,
-      kind: application.kind,
-      type: application.type,
-      applicantName: application.applicantName,
-      applicantEmail: application.applicantEmail,
-      department: application.department,
-      currentDepartment: application.department,
-      documentValues: application.documentValues,
-      feeInr: application.feeInr,
-      feePaid: application.feePaid,
-      submittedAt: application.submittedAt,
-      processingDays: application.processingDays,
-      reviewAt: application.reviewAt,
-      outcome: review.status,
-      rejectionReason: review.reason,
-      documentIssues: review.documentIssues,
-      canReapply: review.status != ApplicationStatus.approved,
-    );
+    // No authoritative integration exists; time passing is not a decision.
+    return application;
   }
 }
 
 /// Exposes the user's scheme applications.
 final schemeApplicationsProvider =
     StateNotifierProvider<SchemeApplicationsNotifier, List<SchemeApplication>>(
-  (ref) => SchemeApplicationsNotifier(),
+  (ref) => SchemeApplicationsNotifier(ref.watch(authProvider.select((s) => s.user?.uid))),
 );

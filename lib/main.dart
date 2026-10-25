@@ -3,6 +3,7 @@ import 'core/storage/offline_workspace.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/localization/framework_localizations.dart';
 
 import 'core/security/drm_services.dart';
@@ -11,18 +12,60 @@ import 'core/localization/language_provider.dart';
 import 'core/di/injection.dart';
 import 'features/language/models/language_model.dart';
 import 'features/language/screens/language_gateway_screen.dart';
+import 'features/auth/providers/auth_provider.dart';
+import 'features/dashboard/screens/main_dashboard_screen.dart';
 
-void main() {
+final _registrationCompleteProvider = FutureProvider.family<bool, String>((ref, uid) async {
+  final prefs = await SharedPreferences.getInstance();
+  return (prefs.getString('ecosus.display_name.$uid') ?? '').trim().isNotEmpty;
+});
+
+class _StartupHome extends ConsumerWidget {
+  const _StartupHome();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authProvider);
+    if (auth.isRestoring) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    final uid = auth.user?.uid;
+    if (uid == null) return const LanguageGatewayScreen();
+    final registered = ref.watch(_registrationCompleteProvider(uid));
+    return registered.when(
+      data: (complete) => complete
+          ? const MainDashboardScreen()
+          : const LanguageGatewayScreen(),
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, stackTrace) => const LanguageGatewayScreen(),
+    );
+  }
+}
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Show the first frame immediately; storage + DRM settle in the
-  // background so cold start never awaits plugins before runApp.
+  // Preload only the locale code before the first Flutter frame, so a saved
+  // Hindi choice never briefly opens the English interface after a restart.
+  String savedCode = 'en';
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final code = prefs.getString('selected_language')?.trim().toLowerCase();
+    if (code != null && kSupportedLanguages.any((lang) => lang.code.toLowerCase() == code)) {
+      savedCode = code;
+    }
+  } catch (_) { /* Use bundled English when preferences are unavailable. */ }
+
+  // Other services and DRM settle in the background after the locale is known.
   // ignore: discarded_futures
   DependencyInjection.init();
   // ignore: discarded_futures
   DrmService.secureScreen();
 
-  runApp(const ProviderScope(child: EcoSusRuralApp()));
+  runApp(ProviderScope(
+    overrides: [languageProvider.overrideWith((ref) => LanguageNotifier(initialCode: savedCode))],
+    child: const EcoSusRuralApp(),
+  ));
 }
 
 class EcoSusRuralApp extends ConsumerStatefulWidget {
@@ -41,7 +84,6 @@ class _EcoSusRuralAppState extends ConsumerState<EcoSusRuralApp> {
   @override
   void initState() {
     super.initState();
-    // Load the user's saved language (if any) before the first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await ref.read(languageProvider.notifier).loadSavedLanguage();
     });
@@ -93,7 +135,7 @@ class _EcoSusRuralAppState extends ConsumerState<EcoSusRuralApp> {
                       return const Locale('en');
                     },
                     localizationsDelegates: appLocalizationsDelegates,
-                    home: const LanguageGatewayScreen(),
+                    home: const _StartupHome(),
                   );
                 },
               ),

@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -33,6 +36,8 @@ class RegistrationScreen extends ConsumerStatefulWidget {
 }
 
 class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
+  static const _secureStorage = FlutterSecureStorage();
+  Timer? _draftTimer;
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -62,6 +67,14 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   @override
   void initState() {
     super.initState();
+    for (final controller in [
+      _nameController, _phoneController, _emailController,
+      _addressController, _pincodeController,
+      _orgNameController, _headNameController,
+    ]) {
+      controller.addListener(_scheduleDraftSave);
+    }
+    _restoreDraft();
     // Upgrade entry points (e.g. "Become a Seller") pre-select the type.
     switch (widget.initialAccountType) {
       case 'seller':
@@ -77,6 +90,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
 
   @override
   void dispose() {
+    _draftTimer?.cancel();
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
@@ -88,6 +102,48 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     _orgNameController.dispose();
     _headNameController.dispose();
     super.dispose();
+  }
+
+  String? get _draftKey {
+    final uid = ref.read(authProvider).user?.uid;
+    return uid == null ? null : 'ecosus.registration.draft.v1.$uid';
+  }
+
+  void _scheduleDraftSave() {
+    _draftTimer?.cancel();
+    _draftTimer = Timer(const Duration(milliseconds: 500), () async {
+      final key = _draftKey;
+      if (key == null) return;
+      final values = {
+        'name': _nameController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'email': _emailController.text.trim(),
+        'address': _addressController.text.trim(),
+        'pincode': _pincodeController.text.trim(),
+        'organisation': _orgNameController.text.trim(),
+        'head': _headNameController.text.trim(),
+      };
+      try {
+        await _secureStorage.write(key: key, value: jsonEncode(values));
+      } catch (_) { /* Keep the form usable if storage is unavailable. */ }
+    });
+  }
+
+  Future<void> _restoreDraft() async {
+    final key = _draftKey;
+    if (key == null) return;
+    try {
+      final raw = await _secureStorage.read(key: key);
+      if (raw == null || !mounted) return;
+      final values = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      _nameController.text = values['name'] as String? ?? '';
+      _phoneController.text = values['phone'] as String? ?? '';
+      _emailController.text = values['email'] as String? ?? '';
+      _addressController.text = values['address'] as String? ?? '';
+      _pincodeController.text = values['pincode'] as String? ?? '';
+      _orgNameController.text = values['organisation'] as String? ?? '';
+      _headNameController.text = values['head'] as String? ?? '';
+    } catch (_) { /* Ignore corrupt or unavailable draft data. */ }
   }
 
   @override
@@ -877,6 +933,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       await prefs.setString('ecosus.display_name.${user.uid}', _nameController.text.trim());
       await prefs.setString('ecosus.auth.user',
           '${user.uid}|${_phoneController.text}|${user.roleKey}');
+      _draftTimer?.cancel();
+      final draftKey = _draftKey;
+      if (draftKey != null) await _secureStorage.delete(key: draftKey);
 
       if (!mounted || !context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

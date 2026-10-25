@@ -1,9 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../core/config/app_config.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../../core/localization/language_provider.dart';
 
 class ChatMessage {
   final String id;
@@ -22,14 +25,61 @@ class ChatMessage {
 }
 
 class ChatNotifier extends StateNotifier<List<ChatMessage>> {
-  ChatNotifier() : super([
+  ChatNotifier(this.owner, this.languageCode) : super([
     ChatMessage(
       id: '0',
-      text: 'Namaste! I am your EcoSusRural AI Assistant. How can I help with your farm today? You can ask a question or upload a photo of a plant.',
+      text: languageCode == 'hi'
+          ? 'नमस्ते! मैं EcoSusRural सहायक हूँ। खेती के बारे में अपना सवाल पूछें।'
+          : 'Namaste! I am your EcoSusRural AI Assistant. How can I help with your farm today? You can ask a question or upload a photo of a plant.',
       isUser: false,
       timestamp: DateTime.now(),
     )
-  ]);
+  ]) { _restore(); }
+
+  final String? owner;
+  final String languageCode;
+  static const _secureStorage = FlutterSecureStorage();
+  Future<void> _writeTail = Future.value();
+  String? get _key => owner == null ? null : 'ecosus.ai.chat.v1.$owner';
+
+  Future<void> _restore() async {
+    final key = _key;
+    if (key == null) return;
+    try {
+      final raw = await _secureStorage.read(key: key);
+      if (raw == null || !mounted) return;
+      final data = jsonDecode(raw) as List;
+      final restored = data.whereType<Map>().map((row) => ChatMessage(
+        id: row['id']?.toString() ?? '',
+        text: row['text']?.toString() ?? '',
+        isUser: row['isUser'] == true,
+        timestamp: DateTime.tryParse(row['timestamp']?.toString() ?? '') ?? DateTime.now(),
+      )).where((message) => message.id.isNotEmpty && message.text.isNotEmpty).toList();
+      final currentIds = state.map((message) => message.id).toSet();
+      if (mounted) {
+        state = [
+          state.first,
+          ...restored.where((message) => !currentIds.contains(message.id)),
+          ...state.skip(1),
+        ];
+      }
+    } catch (_) { /* An unreadable cache must not block the assistant. */ }
+  }
+
+  void _persist() {
+    final key = _key;
+    if (key == null) return;
+    final recent = state.where((message) => message.id != '0' && !message.hasImage)
+        .toList().reversed.take(50).toList().reversed;
+    final snapshot = jsonEncode(recent.map((message) => {
+        'id': message.id,
+        'text': message.text.length > 2000 ? message.text.substring(0, 2000) : message.text,
+        'isUser': message.isUser,
+        'timestamp': message.timestamp.toIso8601String(),
+      }).toList());
+    _writeTail = _writeTail.then((_) =>
+      _secureStorage.write(key: key, value: snapshot)).catchError((Object _) {});
+  }
 
   void sendMessage(String text, {bool hasImage = false}) async {
     if (text.isEmpty && !hasImage) return;
@@ -43,6 +93,7 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
       hasImage: hasImage,
     );
     state = [...state, userMsg];
+    _persist();
 
     // 2. Photo flow: this quick button captures no image bytes (no camera
     // plugin), so nothing can be analysed. We never present a claim of a
@@ -61,7 +112,7 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
     // fallback keeps the chat usable when the gateway is unreachable.
     final aiReply = await _fetchAiReply(text) ??
         'I could not reach the Rural Intelligence service. Please check your connection and try again, or ask again later.';
-    _appendAiReply(aiReply);
+    if (mounted) _appendAiReply(aiReply);
   }
 
   void _appendAiReply(String text) {
@@ -72,6 +123,7 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
       timestamp: DateTime.now(),
     );
     state = [...state, aiMsg];
+    _persist();
   }
 
   /// Calls the self-hosted Rural Intelligence gateway (/api/ai/answer) with
@@ -137,5 +189,8 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
 }
 
 final chatProvider = StateNotifierProvider<ChatNotifier, List<ChatMessage>>(
-  (ref) => ChatNotifier(),
+  (ref) => ChatNotifier(
+    ref.watch(authProvider.select((state) => state.user?.uid)),
+    ref.watch(languageProvider.select((state) => state.code)),
+  ),
 );

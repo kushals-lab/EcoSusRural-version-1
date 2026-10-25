@@ -38,6 +38,40 @@ class ProductModel {
     this.isBiodegradable = false,
   });
 
+  /// A display snapshot for an offline cart, never an approval or price source
+  /// for checkout. The backend must revalidate availability and price.
+  Map<String, dynamic> toCartSnapshot() => {
+        'id': id, 'title': title, 'description': description,
+        'priceInr': priceInr, 'category': category, 'state': state,
+        'makerName': makerName, 'makerVillage': makerVillage,
+        'badges': badges.map((badge) => badge.name).toList(),
+        'rating': rating, 'reviewCount': reviewCount,
+        'impactStory': impactStory, 'isOrganic': isOrganic,
+        'isHandicraft': isHandicraft, 'isGiTagged': isGiTagged,
+        'isBiodegradable': isBiodegradable,
+      };
+
+  factory ProductModel.fromCartSnapshot(Map<String, dynamic> data) => ProductModel(
+        id: data['id'] as String,
+        title: data['title'] as String? ?? '',
+        description: data['description'] as String? ?? '',
+        priceInr: (data['priceInr'] as num?)?.toDouble() ?? 0,
+        category: data['category'] as String? ?? '',
+        state: data['state'] as String? ?? '',
+        makerName: data['makerName'] as String? ?? '',
+        makerVillage: data['makerVillage'] as String? ?? '',
+        badges: (data['badges'] as List? ?? const [])
+            .map((name) => CertificationBadge.values.where((badge) => badge.name == name).firstOrNull)
+            .whereType<CertificationBadge>().toList(),
+        rating: (data['rating'] as num?)?.toDouble() ?? 0,
+        reviewCount: (data['reviewCount'] as num?)?.toInt() ?? 0,
+        impactStory: data['impactStory'] as String? ?? '',
+        isOrganic: data['isOrganic'] as bool? ?? false,
+        isHandicraft: data['isHandicraft'] as bool? ?? false,
+        isGiTagged: data['isGiTagged'] as bool? ?? false,
+        isBiodegradable: data['isBiodegradable'] as bool? ?? false,
+      );
+
   String get badgeLabel {
     final labels = <String>[];
     if (badges.contains(CertificationBadge.giCertified)) labels.add('GI Certified');
