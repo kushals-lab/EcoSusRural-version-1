@@ -58,7 +58,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   _IdType _idType = _IdType.aadhaar;
   _Plan _plan = _Plan.freeTrial;
 
-  bool _emailVerified = true;
+
   bool _pennyDropDone = false;
   bool _isSubmitting = false;
   final Map<String, bool> _docUploads = {};
@@ -372,7 +372,6 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         SizedBox(height: 12.h),
         TextFormField(
           controller: _emailController,
-          onChanged: (_) => setState(() => _emailVerified = false),
           keyboardType: TextInputType.emailAddress,
           decoration: _inputDecoration(ref.tr('emailAddress'), Icons.email),
           validator: (v) =>
@@ -855,12 +854,6 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     }
     if (_step == 2) {
       if (!_formKey.currentState!.validate()) return;
-      if (!_emailVerified) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ref.tr('emailOtpVerify'))),
-        );
-        return;
-      }
       if (_type == _AccountType.buyer && !_pennyDropDone) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(ref.tr('pennyDropVerifyBank'))),
@@ -887,7 +880,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   Future<void> _submit(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
     final user = ref.read(authProvider).user;
-    if (!_emailVerified || user == null) return;
+    if (user == null) return;
     setState(() => _isSubmitting = true);
     try {
       final prefs = await SharedPreferences.getInstance();
