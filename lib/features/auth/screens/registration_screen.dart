@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/localization/language_provider.dart';
+import '../../../core/rbac/rbac.dart';
 import '../../../core/widgets/pincode_verify_field.dart';
 import '../providers/auth_provider.dart';
 import '../../weather/screens/location_selection_screen.dart';
@@ -879,8 +880,18 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
 
   Future<void> _submit(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
-    final user = ref.read(authProvider).user;
-    if (user == null) return;
+    AppUser? user = ref.read(authProvider).user;
+    if (user == null) {
+      final phone = _phoneController.text.trim();
+      final role = _type == _AccountType.seller
+          ? EcoRole.seller
+          : (_type == _AccountType.organisation ? EcoRole.organization : EcoRole.buyer);
+      user = AppUser(
+        uid: 'reg_${phone.isEmpty ? DateTime.now().millisecondsSinceEpoch.toString() : phone}',
+        phoneNumber: phone,
+        role: role,
+      );
+    }
     setState(() => _isSubmitting = true);
     try {
       final prefs = await SharedPreferences.getInstance();
