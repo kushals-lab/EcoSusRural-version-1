@@ -74,8 +74,9 @@ class DryerSimulationVisual extends StatelessWidget {
         .clamp(.08, 1.0);
     final airflow = snapshot.doorOpen ? 0.0 : (snapshot.evapKgPerHour * 120).clamp(0.0, 1.0);
     final moisture = (snapshot.moisturePct ?? 0).clamp(0.0, 100.0) / 100;
-    final progress = snapshot.trays.isEmpty ? 0.0 : snapshot.trays
-        .fold<double>(0, (sum, tray) => sum + tray.progress) / snapshot.trays.length;
+    final loadedTrays = snapshot.trays.where((tray) => tray.loaded).toList();
+    final progress = loadedTrays.isEmpty ? 0.0 : loadedTrays
+        .fold<double>(0, (sum, tray) => sum + tray.progress) / loadedTrays.length;
     return Semantics(
       label: 'Live dryer animation: ${snapshot.sunlight.toStringAsFixed(0)} watts per square metre sunlight, '
           '${snapshot.moisturePct?.toStringAsFixed(1) ?? 'no'} percent fruit moisture, '
